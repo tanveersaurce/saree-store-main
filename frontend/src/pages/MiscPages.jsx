@@ -24,7 +24,7 @@ export function Wishlist() {
 
   return (
     <>
-      <Helmet><title>My Wishlist | SareeSaanvi</title></Helmet>
+      <Helmet><title>My Wishlist | Saaj</title></Helmet>
       <div className="page-container py-10">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-saree-charcoal mb-8 flex items-center gap-2">
           <Heart size={24} className="text-saree-rose" fill="currentColor" />

@@ -48,7 +48,7 @@ export default function Checkout() {
           key: keyRes.data.key,
           amount: Math.round(grandTotal * 100),
           currency: 'INR',
-          name: 'SareeSaanvi',
+          name: 'saaj',
           description: `Order #${orderId}`,
           order_id: rzpOrderRes.data.order.id,
           prefill: { name: user?.name, email: user?.email, contact: user?.phone },
@@ -117,7 +117,7 @@ export default function Checkout() {
 
   return (
     <>
-      <Helmet><title>Checkout | SareeSaanvi</title></Helmet>
+      <Helmet><title>Checkout | Saaj</title></Helmet>
       <div className="page-container py-10 max-w-5xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-saree-charcoal mb-6">Checkout</h1>
         <StepIndicator />

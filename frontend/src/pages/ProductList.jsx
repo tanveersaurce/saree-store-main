@@ -215,7 +215,7 @@ export default function ProductList() {
   return (
     <>
       <Helmet>
-        <title>{category ? `${displayCategoryName} | SareeSaanvi` : keyword ? `"${keyword}" | SareeSaanvi` : 'All Collections | SareeSaanvi'}</title>
+        <title>{category ? `${displayCategoryName} | Saaj` : keyword ? `"${keyword}" | Saaj` : 'All Collections | Saaj'}</title>
       </Helmet>
 
       <div className="page-container py-8">

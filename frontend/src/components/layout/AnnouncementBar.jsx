@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 const messages = [
   '🌸 Free shipping on orders above ₹999',
   '✨ New Kanjivaram collection just arrived!',
-  '🎁 Use code SAANVI10 for 10% off your first order',
+  '🎁 Use code SAAJ10 for 10% off your first order',
   '💎 Authentic handloom sarees from India\'s finest weavers',
 ];
 

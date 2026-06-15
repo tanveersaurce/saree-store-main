@@ -80,7 +80,7 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>{product.name} | SareeSaanvi</title>
+        <title>{product.name} | Saaj</title>
         <meta name="description" content={product.shortDescription || product.description?.slice(0, 160)} />
       </Helmet>
 

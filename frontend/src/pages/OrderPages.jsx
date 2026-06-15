@@ -101,7 +101,7 @@ export function Orders() {
 
   return (
     <>
-      <Helmet><title>My Orders | SareeSaanvi</title></Helmet>
+      <Helmet><title>My Orders | Saaj</title></Helmet>
       <div className="page-container py-10 max-w-3xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-saree-charcoal mb-8">
           My Orders
@@ -177,7 +177,7 @@ export function OrderDetail() {
 
   return (
     <>
-      <Helmet><title>Order #{order.orderNumber} | SareeSaanvi</title></Helmet>
+      <Helmet><title>Order #{order.orderNumber} | Saaj</title></Helmet>
       <div className="page-container py-10 max-w-3xl">
         <div className="flex items-center gap-3 mb-8">
           <Link to="/orders" className="text-gray-400 hover:text-saree-rose text-sm transition-colors">

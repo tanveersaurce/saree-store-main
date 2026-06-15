@@ -45,7 +45,7 @@ const FEATURES = [
 
 const TESTIMONIALS = [
   { name: 'Priya Sharma', location: 'Mumbai', text: 'The Kanjivaram saree I ordered was absolutely stunning! The quality is exceptional and delivery was super fast.', rating: 5, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face' },
-  { name: 'Ananya Reddy', location: 'Hyderabad', text: "My bridal saree from SareeSaanvi was breathtaking. Every guest complimented me. Couldn't be happier!", rating: 5, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face' },
+  { name: 'Ananya Reddy', location: 'Hyderabad', text: "My bridal saree from Saaj was breathtaking. Every guest complimented me. Couldn't be happier!", rating: 5, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face' },
   { name: 'Kavitha Nair', location: 'Kochi', text: 'Beautiful handloom collection. Love how they preserve traditional weaving techniques while making it accessible.', rating: 5, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face' },
 ];
 
@@ -94,7 +94,7 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>SareeSaanvi — Premium Handloom & Silk Sarees Online</title>
+        <title>Saaj — Premium Handloom & Silk Sarees Online</title>
         <meta name="description" content="Shop authentic handloom, Kanjivaram, Banarasi, and designer sarees from India's finest weavers. Free shipping on orders above ₹999." />
       </Helmet>
 

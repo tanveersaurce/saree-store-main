@@ -50,7 +50,7 @@ export default function Profile() {
 
   return (
     <>
-      <Helmet><title>My Profile | SareeSaanvi</title></Helmet>
+      <Helmet><title>My Profile | Saaj</title></Helmet>
       <div className="page-container py-10 max-w-2xl">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-saree-charcoal mb-8">My Account</h1>
 

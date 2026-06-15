@@ -60,7 +60,7 @@ export default function Navbar({ scrolled }) {
           >
             <img
               src={logo}
-              alt="Saanvi Sarees"
+              alt="Saaj Sarees"
               className="h-14 lg:h-16 w-auto"
             />
           </Link>

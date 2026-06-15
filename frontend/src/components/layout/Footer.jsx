@@ -64,8 +64,8 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex flex-col mb-4">
-              <span className="font-display text-3xl font-bold text-saree-crimson">Saanvi</span>
-              <span className="font-accent text-xs text-saree-gold tracking-[0.4em] uppercase -mt-1">Sarees</span>
+              <span className="font-display text-3xl font-bold text-saree-crimson">Saaj</span>
+              {/* <span className="font-accent text-xs text-saree-gold tracking-[0.4em] uppercase -mt-1">Sarees</span> */}
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
               Celebrating the timeless beauty of Indian handloom. Every saree tells a story — of craft, culture, and the women who wear them.
@@ -85,14 +85,14 @@ export default function Footer() {
             </div>
             {/* Contact */}
             <div className="space-y-2.5">
-              <a href="mailto:hello@sareesaanvi.com" className="flex items-center gap-2.5 text-gray-400 text-sm hover:text-saree-crimson transition-colors">
-                <Mail size={14} className="text-saree-rose/60" /> hello@sareesaanvi.com
+              <a href="mailto:hello@saaj.com" className="flex items-center gap-2.5 text-gray-400 text-sm hover:text-saree-crimson transition-colors">
+                <Mail size={14} className="text-saree-rose/60" /> hello@saaj.com
               </a>
               <a href="tel:+911800001234" className="flex items-center gap-2.5 text-gray-400 text-sm hover:text-saree-crimson transition-colors">
                 <Phone size={14} className="text-saree-rose/60" /> +91 1800 001 234 (Toll Free)
               </a>
               <span className="flex items-center gap-2.5 text-gray-400 text-sm">
-                <MapPin size={14} className="text-saree-rose/60" /> Kanchipuram, Tamil Nadu, India
+                <MapPin size={14} className="text-saree-rose/60" /> Bhopal, Madhya Pradesh, India
               </span>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-white/10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-gray-500 text-xs">
-              © {new Date().getFullYear()} SareeSaanvi. All rights reserved. Made with{' '}
+              © {new Date().getFullYear()} Saaj. All rights reserved. Made with{' '}
               <Heart size={10} className="inline text-saree-rose" fill="currentColor" /> in India.
             </p>
             <div className="flex items-center gap-3 flex-wrap justify-center">

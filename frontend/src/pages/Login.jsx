@@ -42,7 +42,7 @@ export default function Login() {
           ))}
         </div>
         <div className="relative text-center text-white px-10">
-          <p className="font-accent text-6xl italic mb-2 text-saree-gold">Saanvi</p>
+          <p className="font-accent text-6xl italic mb-2 text-saree-gold">Saaj</p>
           <p className="font-display text-3xl font-bold mb-4">Welcome Back</p>
           <p className="text-white/70 text-lg leading-relaxed max-w-xs mx-auto">
             Discover thousands of handcrafted sarees from India's finest weavers
@@ -68,7 +68,7 @@ export default function Login() {
 
           <div className="mb-8">
             <h1 className="font-display text-3xl font-bold text-saree-charcoal">Sign In</h1>
-            <p className="text-gray-500 mt-1">Welcome back to SareeSaanvi</p>
+            <p className="text-gray-500 mt-1">Welcome back to Saaj</p>
           </div>
 
           {errors.form && (
@@ -112,7 +112,7 @@ export default function Login() {
           {/* Demo credentials */}
           <div className="mt-5 p-4 bg-amber-50 border border-amber-100 rounded-xl">
             <p className="text-xs font-semibold text-amber-700 mb-1">Demo Credentials:</p>
-            <p className="text-xs text-amber-600">Admin: admin@sareesaanvi.com / admin@123</p>
+            <p className="text-xs text-amber-600">Admin: admin@saaj.com / admin@123</p>
             <p className="text-xs text-amber-600">User: priya@example.com / user@123</p>
           </div>
 

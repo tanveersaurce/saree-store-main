@@ -29,7 +29,7 @@ const OCCASIONS_LIST = ['Wedding','Festival','Party','Casual','Office','Bridal',
 const EMPTY_PRODUCT = {
   name: '', description: '', shortDescription: '', price: '', discountPrice: '', category: '', fabric: '', printTechnique: [], occasion: [],
   stock: '', weight: 500, sareeLength: 5.5, blouseLength: 0.8, blouseIncluded: false,
-  careInstructions: 'Dry clean only', tags: '', brand: 'SareeSaanvi Original', origin: 'India',
+  careInstructions: 'Dry clean only', tags: '', brand: 'Saaj Original', origin: 'India',
   isFeatured: false, isTrending: false, isNewArrival: false, isBestSeller: false, isActive: true,
   images: [{ public_id: 'placeholder', url: '', alt: '', isMain: true }],
 };
