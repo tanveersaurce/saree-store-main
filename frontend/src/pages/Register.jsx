@@ -10,6 +10,31 @@ const QUOTES = [
   { text: 'Every thread tells a story worth wearing.', author: 'Weavers of India' },
 ];
 
+const pageVariants = {
+  initial: { opacity: 0, x: 30 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const formContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+      delayChildren: 0.12
+    }
+  }
+};
+
+const formItemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+  }
+};
+
 export default function Register() {
   const navigate = useNavigate();
   const { register: registerUser, loading } = useAuthStore();
@@ -40,7 +65,12 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-saree-blush flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-5xl min-h-[620px] flex rounded-2xl overflow-hidden shadow-2xl">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        className="w-full max-w-5xl min-h-[620px] flex rounded-2xl overflow-hidden shadow-2xl"
+      >
 
         {/* ── LEFT: dark photo panel with form ── */}
         <div className="relative flex-[1.1] flex flex-col overflow-hidden">
@@ -69,24 +99,26 @@ export default function Register() {
           {/* Form body */}
           <div className="relative z-10 flex-1 flex flex-col justify-center px-8 pb-10 pt-6">
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              variants={formContainerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              <h1 className="font-display text-2xl font-bold text-white leading-tight mb-1">
-                Create your account
-              </h1>
-              <p className="text-white/45 text-xs mb-8">Join thousands of saree lovers</p>
+              <motion.div variants={formItemVariants}>
+                <h1 className="font-display text-2xl font-bold text-white leading-tight mb-1">
+                  Create your account
+                </h1>
+                <p className="text-white/45 text-xs mb-8">Join thousands of saree lovers</p>
+              </motion.div>
 
               {errors.form && (
-                <div className="bg-red-500/20 border border-red-400/30 text-red-300 text-xs px-3 py-2 rounded-lg mb-5">
+                <motion.div variants={formItemVariants} className="bg-red-500/20 border border-red-400/30 text-red-300 text-xs px-3 py-2 rounded-lg mb-5">
                   {errors.form}
-                </div>
+                </motion.div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Name + Phone row */}
-                <div className="grid grid-cols-2 gap-5">
+                <motion.div variants={formItemVariants} className="grid grid-cols-2 gap-5">
                   <UnderlineField
                     label="Full Name"
                     type="text"
@@ -102,20 +134,22 @@ export default function Register() {
                     onChange={set('phone')}
                     placeholder="9876543210"
                   />
-                </div>
+                </motion.div>
 
                 {/* Email */}
-                <UnderlineField
-                  label="Email"
-                  type="email"
-                  value={form.email}
-                  onChange={set('email')}
-                  placeholder="you@email.com"
-                  error={errors.email}
-                />
+                <motion.div variants={formItemVariants}>
+                  <UnderlineField
+                    label="Email"
+                    type="email"
+                    value={form.email}
+                    onChange={set('email')}
+                    placeholder="you@email.com"
+                    error={errors.email}
+                  />
+                </motion.div>
 
                 {/* Password */}
-                <div className="relative">
+                <motion.div variants={formItemVariants} className="relative">
                   <UnderlineField
                     label="Create password"
                     type={showPwd ? 'text' : 'password'}
@@ -124,6 +158,7 @@ export default function Register() {
                     placeholder="Min. 6 characters"
                     error={errors.password}
                     extraPadRight
+                    className="w-full"
                   />
                   <button
                     type="button"
@@ -132,37 +167,41 @@ export default function Register() {
                   >
                     {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
-                </div>
+                </motion.div>
 
                 {/* Confirm password */}
-                <UnderlineField
-                  label="Confirm password"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={set('confirmPassword')}
-                  placeholder="Repeat your password"
-                  error={errors.confirmPassword}
-                />
+                <motion.div variants={formItemVariants}>
+                  <UnderlineField
+                    label="Confirm password"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={set('confirmPassword')}
+                    placeholder="Repeat your password"
+                    error={errors.confirmPassword}
+                  />
+                </motion.div>
 
                 {/* CTA — saree-rose is the brand accent */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full mt-2 py-3 rounded-lg bg-saree-rose text-white text-sm font-semibold tracking-wide hover:bg-saree-rose/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                >
-                  {loading ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    'Create Account 🌸'
-                  )}
-                </button>
+                <motion.div variants={formItemVariants}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-2 py-3 rounded-lg bg-saree-rose text-white text-sm font-semibold tracking-wide hover:bg-saree-rose/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      'Create Account 🌸'
+                    )}
+                  </button>
+                </motion.div>
 
-                <p className="text-white/30 text-[10px] leading-relaxed pt-1">
+                <motion.p variants={formItemVariants} className="text-white/30 text-[10px] leading-relaxed pt-1">
                   By creating an account, you agree to our{' '}
                   <Link to="/terms" className="text-saree-rose/80 hover:text-saree-rose underline underline-offset-2">Terms</Link>{' '}
                   and{' '}
                   <Link to="/privacy" className="text-saree-rose/80 hover:text-saree-rose underline underline-offset-2">Privacy Policy</Link>.
-                </p>
+                </motion.p>
               </form>
             </motion.div>
           </div>
@@ -241,7 +280,7 @@ export default function Register() {
           </div>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }

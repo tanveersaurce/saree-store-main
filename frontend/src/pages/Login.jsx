@@ -10,6 +10,31 @@ const QUOTES = [
   { text: 'Wear what makes your soul smile.', author: 'Unknown' },
 ];
 
+const pageVariants = {
+  initial: { opacity: 0, x: -30 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const formContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.12
+    }
+  }
+};
+
+const formItemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+  }
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,7 +67,12 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-saree-blush flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-4xl min-h-[560px] flex rounded-2xl overflow-hidden shadow-2xl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-4xl min-h-[560px] flex rounded-2xl overflow-hidden shadow-2xl"
+      >
 
         {/* ── LEFT: dark photo panel with form ── */}
         <div className="relative flex-[1.1] flex flex-col overflow-hidden">
@@ -74,32 +104,38 @@ export default function Login() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              variants={formContainerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              <h1 className="font-display text-2xl font-bold text-white leading-tight mb-1">
-                Welcome back
-              </h1>
-              <p className="text-white/45 text-xs mb-8">Sign in to your Saaj account</p>
+              <motion.div variants={formItemVariants}>
+                <h1 className="font-display text-2xl font-bold text-white leading-tight mb-1">
+                  Welcome back
+                </h1>
+                <p className="text-white/45 text-xs mb-8">Sign in to your Saaj account</p>
+              </motion.div>
 
               {/* Error message */}
               {errors.form && (
-                <div className="bg-red-500/20 border border-red-400/30 text-red-300 text-xs px-3 py-2 rounded-lg mb-5">
+                <motion.div variants={formItemVariants} className="bg-red-500/20 border border-red-400/30 text-red-300 text-xs px-3 py-2 rounded-lg mb-5">
                   {errors.form}
-                </div>
+                </motion.div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email */}
-                <UnderlineField
-                  label="Email"
-                  type="email"
-                  value={form.email}
-                  onChange={set('email')}
-                  placeholder="you@email.com"
-                  error={errors.email}
-                />
+                <motion.div variants={formItemVariants}>
+                  <UnderlineField
+                    label="Email"
+                    type="email"
+                    value={form.email}
+                    onChange={set('email')}
+                    placeholder="you@email.com"
+                    error={errors.email}
+                  />
+                </motion.div>
 
                 {/* Password */}
-                <div>
+                <motion.div variants={formItemVariants}>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-white/40 text-[10px] uppercase tracking-widest">
                       Password
@@ -132,10 +168,11 @@ export default function Login() {
                     </button>
                   </div>
                   {errors.password && <p className="text-red-400 text-[10px] mt-1">{errors.password}</p>}
-                </div>
+                </motion.div>
 
                 {/* CTA */}
-                <button
+                <motion.button
+                  variants={formItemVariants}
                   type="submit"
                   disabled={loading}
                   className="w-full py-3 rounded-lg bg-saree-rose text-white text-sm font-semibold tracking-wide hover:bg-saree-rose/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
@@ -145,17 +182,17 @@ export default function Login() {
                   ) : (
                     'Sign In'
                   )}
-                </button>
+                </motion.button>
               </form>
 
               {/* Demo credentials */}
-              <div className="mt-6 p-3 rounded-lg border border-white/10 bg-white/5">
+              <motion.div variants={formItemVariants} className="mt-6 p-3 rounded-lg border border-white/10 bg-white/5">
                 <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1.5">
                   Demo Credentials
                 </p>
                 <p className="text-white/40 text-[11px]">Admin: admin@saaj.com / admin@123</p>
                 <p className="text-white/40 text-[11px]">User: priya@example.com / user@123</p>
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -232,7 +269,7 @@ export default function Login() {
           </div>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }
