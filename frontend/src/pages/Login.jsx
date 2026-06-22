@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../context/store';
+
+const QUOTES = [
+  { text: 'Every saree is a love letter written in threads.', author: 'Saaj Atelier' },
+  { text: 'Elegance is not about being noticed, it is about being remembered.', author: 'Giorgio Armani' },
+  { text: 'Wear what makes your soul smile.', author: 'Unknown' },
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +19,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [errors, setErrors] = useState({});
+  const [quoteIdx, setQuoteIdx] = useState(0);
 
   const validate = () => {
     const e = {};
@@ -31,97 +38,224 @@ export default function Login() {
     else setErrors({ form: result.message });
   };
 
+  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
   return (
-    <div className="min-h-screen bg-gradient-saree flex">
-      {/* Left decorative panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-hero items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="absolute rounded-full border border-white/30"
-              style={{ width: `${(i + 1) * 120}px`, height: `${(i + 1) * 120}px`, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-          ))}
-        </div>
-        <div className="relative text-center text-white px-10">
-          <p className="font-accent text-6xl italic mb-2 text-saree-gold">Saaj</p>
-          <p className="font-display text-3xl font-bold mb-4">Welcome Back</p>
-          <p className="text-white/70 text-lg leading-relaxed max-w-xs mx-auto">
-            Discover thousands of handcrafted sarees from India's finest weavers
-          </p>
-          <div className="flex justify-center gap-2 mt-8">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-white/40" style={{ animationDelay: `${i * 0.2}s` }} />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-saree-blush flex items-center justify-center p-4 md:p-8">
+      <div className="w-full max-w-4xl min-h-[560px] flex rounded-2xl overflow-hidden shadow-2xl">
 
-      {/* Right: Form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <Link to="/" className="inline-flex items-center gap-1.5 text-gray-500 text-sm hover:text-saree-rose mb-8 transition-colors">
-            <ArrowLeft size={15} /> Back to shop
-          </Link>
+        {/* ── LEFT: dark photo panel with form ── */}
+        <div className="relative flex-[1.1] flex flex-col overflow-hidden">
+          {/* Background image */}
+          <img
+            src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1000&h=1200&fit=crop"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-saree-charcoal/95 via-saree-charcoal/70 to-saree-charcoal/50" />
 
-          <div className="mb-8">
-            <h1 className="font-display text-3xl font-bold text-saree-charcoal">Sign In</h1>
-            <p className="text-gray-500 mt-1">Welcome back to Saaj</p>
+          {/* Top bar */}
+          <div className="relative z-10 flex items-center justify-between px-7 pt-6">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-white/60 text-xs hover:text-white transition-colors"
+            >
+              <ArrowLeft size={13} />
+              Back
+            </Link>
+            <span className="text-white/50 text-xs tracking-wide">Returning customer</span>
           </div>
 
-          {errors.form && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-5">
-              {errors.form}
-            </div>
-          )}
+          {/* Form body */}
+          <div className="relative z-10 flex-1 flex flex-col justify-center px-8 pb-10 pt-6">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <h1 className="font-display text-2xl font-bold text-white leading-tight mb-1">
+                Welcome back
+              </h1>
+              <p className="text-white/45 text-xs mb-8">Sign in to your Saaj account</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="input-label">Email Address</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@email.com" className={`input-field pl-11 ${errors.email ? 'border-red-400 ring-2 ring-red-100' : ''}`} />
-              </div>
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
+              {/* Error message */}
+              {errors.form && (
+                <div className="bg-red-500/20 border border-red-400/30 text-red-300 text-xs px-3 py-2 rounded-lg mb-5">
+                  {errors.form}
+                </div>
+              )}
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="input-label mb-0">Password</label>
-                <Link to="/forgot-password" className="text-xs text-saree-rose hover:underline">Forgot password?</Link>
-              </div>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••" className={`input-field pl-11 pr-11 ${errors.password ? 'border-red-400 ring-2 ring-red-100' : ''}`} />
-                <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email */}
+                <UnderlineField
+                  label="Email"
+                  type="email"
+                  value={form.email}
+                  onChange={set('email')}
+                  placeholder="you@email.com"
+                  error={errors.email}
+                />
+
+                {/* Password */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-white/40 text-[10px] uppercase tracking-widest">
+                      Password
+                    </label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-[10px] text-saree-rose/80 hover:text-saree-rose transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPwd ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={set('password')}
+                      placeholder="••••••••"
+                      className={`
+                        bg-transparent border-0 border-b text-white text-sm placeholder:text-white/20
+                        focus:outline-none focus:border-saree-rose pb-2 transition-colors w-full pr-6
+                        ${errors.password ? 'border-red-400/70' : 'border-white/20'}
+                      `}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((s) => !s)}
+                      className="absolute right-0 bottom-2.5 text-white/35 hover:text-white/70 transition-colors"
+                    >
+                      {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-red-400 text-[10px] mt-1">{errors.password}</p>}
+                </div>
+
+                {/* CTA */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 rounded-lg bg-saree-rose text-white text-sm font-semibold tracking-wide hover:bg-saree-rose/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
+                >
+                  {loading ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Sign In'
+                  )}
                 </button>
+              </form>
+
+              {/* Demo credentials */}
+              <div className="mt-6 p-3 rounded-lg border border-white/10 bg-white/5">
+                <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1.5">
+                  Demo Credentials
+                </p>
+                <p className="text-white/40 text-[11px]">Admin: admin@saaj.com / admin@123</p>
+                <p className="text-white/40 text-[11px]">User: priya@example.com / user@123</p>
               </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+            </motion.div>
+          </div>
+        </div>
+
+        {/* ── RIGHT: warm saree-rose panel ── */}
+        <div className="hidden lg:flex relative w-[38%] flex-col bg-saree-rose overflow-hidden">
+          {/* Soft background image */}
+          <img
+            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=1000&fit=crop"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover mix-blend-soft-light opacity-40"
+          />
+          <div className="absolute inset-0 bg-saree-rose/70" />
+
+          {/* Top tab label */}
+          <div className="relative z-10 flex justify-end">
+            <div className="bg-saree-charcoal/25 text-white/70 text-xs px-5 py-3 rounded-bl-xl">
+              Returning customer
             </div>
-
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3.5 text-base mt-2">
-              {loading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Demo credentials */}
-          <div className="mt-5 p-4 bg-amber-50 border border-amber-100 rounded-xl">
-            <p className="text-xs font-semibold text-amber-700 mb-1">Demo Credentials:</p>
-            <p className="text-xs text-amber-600">Admin: admin@saaj.com / admin@123</p>
-            <p className="text-xs text-amber-600">User: priya@example.com / user@123</p>
           </div>
 
-          <p className="text-center text-gray-500 text-sm mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-saree-rose font-semibold hover:underline">Create one</Link>
-          </p>
-        </motion.div>
+          {/* Quote block */}
+          <div className="relative z-10 flex-1 flex flex-col items-start justify-center px-10 pb-16">
+            {/* Decorative quote mark */}
+            <span
+              className="text-white/30 font-serif select-none mb-4"
+              style={{ fontSize: '5rem', lineHeight: 1 }}
+            >
+              ❝
+            </span>
+
+            {/* Animated quote */}
+            <div className="min-h-[100px]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={quoteIdx}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-white text-xl italic leading-snug font-accent"
+                >
+                  {QUOTES[quoteIdx].text}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+
+            {/* Dot pagination */}
+            <div className="flex gap-2 mt-7">
+              {QUOTES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setQuoteIdx(i)}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === quoteIdx
+                      ? 'w-5 h-2 bg-white'
+                      : 'w-2 h-2 bg-white/35 hover:bg-white/60'
+                  }`}
+                  aria-label={`Quote ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom: create account link */}
+          <div className="relative z-10 px-10 pb-8 text-right">
+            <p className="text-white/60 text-xs">
+              New to Saaj?{' '}
+              <Link to="/register" className="text-white font-bold hover:underline underline-offset-2">
+                Create account
+              </Link>
+            </p>
+          </div>
+        </div>
+
       </div>
+    </div>
+  );
+}
+
+/* ── Reusable underline-style input ── */
+function UnderlineField({ label, type, value, onChange, placeholder, error }) {
+  return (
+    <div className="flex flex-col">
+      <label className="text-white/40 text-[10px] uppercase tracking-widest mb-1.5">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`
+          bg-transparent border-0 border-b text-white text-sm placeholder:text-white/20
+          focus:outline-none focus:border-saree-rose pb-2 transition-colors w-full
+          ${error ? 'border-red-400/70' : 'border-white/20'}
+        `}
+      />
+      {error && <p className="text-red-400 text-[10px] mt-1">{error}</p>}
     </div>
   );
 }
