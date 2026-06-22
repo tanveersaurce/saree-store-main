@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X, ChevronDown, Grid3X3, LayoutList, Search } from 'lucide-react';
@@ -51,6 +51,7 @@ const FilterAccordion = ({ title, children, defaultOpen = true }) => {
 };
 
 export default function ProductList() {
+  const navigate = useNavigate();
   const { category } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -85,6 +86,20 @@ export default function ProductList() {
 
   const activeCategory = categoriesData?.find((c) => c.slug === category);
   const displayCategoryName = activeCategory ? activeCategory.name : (category ? formatCategoryName(category) : 'All Collections');
+  const pathCategoryName = activeCategory ? activeCategory.name : '';
+
+  const activePrints = [
+    ...(pathCategoryName ? [pathCategoryName] : []),
+    ...prints
+  ];
+
+  const categories = categoriesData || [];
+  const dynamicFabrics = categories.filter(c => c.type === 'fabric').length > 0
+    ? categories.filter(c => c.type === 'fabric').map(c => c.name)
+    : FABRICS;
+  const dynamicPrints = categories.filter(c => c.type === 'print').length > 0
+    ? categories.filter(c => c.type === 'print').map(c => c.name)
+    : PRINTS;
 
   const params = {
     ...(keyword && { keyword }),
@@ -119,6 +134,21 @@ export default function ProductList() {
     const arr = current.includes(val) ? current.filter((v) => v !== val) : [...current, val];
     setParam(key, arr.join(','));
   }, [setParam]);
+
+  const togglePrint = useCallback((pri) => {
+    if (pri === pathCategoryName) {
+      if (prints.includes(pri)) {
+        setParam('print', prints.filter(p => p !== pri).join(','));
+      } else {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('page');
+        navigate(`/collections?${newParams.toString()}`);
+      }
+      return;
+    }
+    const arr = prints.includes(pri) ? prints.filter((p) => p !== pri) : [...prints, pri];
+    setParam('print', arr.join(','));
+  }, [prints, pathCategoryName, searchParams, setParam, navigate]);
 
   const setPriceRange = (min, max) => {
     setSearchParams((prev) => {
@@ -160,9 +190,9 @@ export default function ProductList() {
         </div>
       </FilterAccordion>
 
-      <FilterAccordion title="Fabric">
+      <FilterAccordion title="Categories by Fabric">
         <div className="space-y-2">
-          {FABRICS.map((fab) => (
+          {dynamicFabrics.map((fab) => (
             <label key={fab} className="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox" checked={fabrics.includes(fab)} onChange={() => toggleArray('fabric', fab, fabrics)}
                 className="w-4 h-4 rounded border-gray-300 text-saree-rose focus:ring-saree-rose accent-pink-600" />
@@ -172,13 +202,13 @@ export default function ProductList() {
         </div>
       </FilterAccordion>
 
-      <FilterAccordion title="Print Technique">
+      <FilterAccordion title="Categories by Print">
         <div className="space-y-2">
-          {PRINTS.map((pri) => (
+          {dynamicPrints.map((pri) => (
             <label key={pri} className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" checked={prints.includes(pri)} onChange={() => toggleArray('print', pri, prints)}
+              <input type="checkbox" checked={activePrints.includes(pri)} onChange={() => togglePrint(pri)}
                 className="w-4 h-4 rounded border-gray-300 text-saree-rose focus:ring-saree-rose accent-pink-600" />
-              <span className={`text-sm ${prints.includes(pri) ? 'text-saree-rose font-medium' : 'text-gray-600 group-hover:text-saree-rose'}`}>{pri}</span>
+              <span className={`text-sm ${activePrints.includes(pri) ? 'text-saree-rose font-medium' : 'text-gray-600 group-hover:text-saree-rose'}`}>{pri}</span>
             </label>
           ))}
         </div>

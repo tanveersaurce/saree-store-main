@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { ArrowRight, Sparkles, Shield, Truck, RotateCcw, Star } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, Truck, RotateCcw, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
@@ -11,30 +11,45 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import 'swiper/css/effect-fade';
 
-import { productAPI, bannerAPI } from '../services/api';
+import { productAPI, bannerAPI, categoryAPI } from '../services/api';
 import ProductCard from '../components/product/ProductCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import banner from '../components/images/banner.png'
 
 const formatPrice = (p) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p);
 
-const FEATURED_CATEGORIES = [
-  { name: 'Bridal', label: 'Bridal Sarees', href: '/collections/bridal-sarees', emoji: '👰', color: 'from-rose-100 to-pink-200', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop' },
-  { name: 'Silk', label: 'Silk Sarees', href: '/collections/silk-sarees', emoji: '✨', color: 'from-amber-100 to-yellow-200', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&h=500&fit=crop' },
-  { name: 'Designer', label: 'Designer', href: '/collections/designer-sarees', emoji: '💎', color: 'from-purple-100 to-violet-200', image: 'https://imgs.search.brave.com/JQAJvr47DXRUg4wPpY_9vOo94PIW6pNL3elWH_bEIsc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGlk/aXlhYS5jb20vY2Ru/L3Nob3AvZmlsZXMv/aW1nXzE4NTYuanBn/P3Y9MTc0NjAxNjc0/MSZ3aWR0aD0yMzI4' },
-  { name: 'Cotton', label: 'Cotton Sarees', href: '/collections/cotton-sarees', emoji: '🌿', color: 'from-green-100 to-emerald-200', image: 'https://imgs.search.brave.com/JKKLwF-VowSj8EFFlCF9SPfFOTROu75fqbmab-AoUBU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Ymlzd2FiYW5nbGEu/aW4vd3AtY29udGVu/dC91cGxvYWRzLzIw/MjYvMDQvMzU1NDVf/RFNDXzYwMjhfQmlz/d2EtQmFuZ2xhLTQw/MHg2MTcud2VicA' },
-  { name: 'Banarasi', label: 'Banarasi', href: '/collections/banarasi-sarees', emoji: '🏛️', color: 'from-blue-100 to-indigo-200', image: 'https://imgs.search.brave.com/6ece-6xPvT97g8UiUq60EKmkO8oGte1mv5oZaoHNa08/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMwLm1pcnJhdy5j/b20vaW1hZ2VzLzEy/OTM0MTg3L2dyZWVu/XzFfbG9uZy5KUEc_/MTczMDIwMTk1MA' },
-  { name: 'Casual', label: 'Casual Wear', href: '/collections/casual-sarees', emoji: '🌸', color: 'from-pink-100 to-rose-200', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=500&fit=crop' },
-];
+const FALLBACK_CATEGORIES = {
+  Bagh: { emoji: '💮', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop' },
+  Batik: { emoji: '🎨', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&h=500&fit=crop' },
+  Bagru: { emoji: '🏺', image: 'https://imgs.search.brave.com/JQAJvr47DXRUg4wPpY_9vOo94PIW6pNL3elWH_bEIsc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGlk/aXlhYS5jb20vY2Ru/L3Nob3AvZmlsZXMv/aW1nXzE4NTYuanBn/P3Y9MTc0NjAxNjc0/MSZ3aWR0aD0yMzI4' },
+  Chanderi: { emoji: '🌸', image: 'https://imgs.search.brave.com/JKKLwF-VowSj8EFFlCF9SPfFOTROu75fqbmab-AoUBU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Ymlzd2FiYW5nbGEu/aW4vd3AtY29udGVu/dC91cGxvYWRzLzIw/MjYvMDQvMzU1NDVf/RFNDXzYwMjhfQmlz/d2EtQmFuZ2xhLTQw/MHg2MTcud2VicA' },
+  Dabu: { emoji: '🌿', image: 'https://imgs.search.brave.com/6ece-6xPvT97g8UiUq60EKmkO8oGte1mv5oZaoHNa08/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMwLm1pcnJhdy5j/b20vaW1hZ2VzLzEy/OTM0MTg3L2dyZWVu/XzFfbG9uZy5KUEc_/MTczMDIwMTk1MA' },
+  'Zari-Zardozi': { emoji: '✨', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=500&fit=crop' },
+  Kalamkari: { emoji: '🖋️', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop' },
+  Ajrakh: { emoji: '🏵️', image: 'https://imgs.search.brave.com/JQAJvr47DXRUg4wPpY_9vOo94PIW6pNL3elWH_bEIsc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGlk/aXlhYS5jb20vY2Ru/L3Nob3AvZmlsZXMv/aW1nXzE4NTYuanBn/P3Y9MTc0NjAxNjc0/MSZ3aWR0aD0yMzI4' },
+  Bandhani: { emoji: '🎈', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=500&fit=crop' },
+  Leheriya: { emoji: '〰️', image: 'https://imgs.search.brave.com/6ece-6xPvT97g8UiUq60EKmkO8oGte1mv5oZaoHNa08/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMwLm1pcnJhdy5j/b20vaW1hZ2VzLzEy/OTM0MTg3L2dyZWVu/XzFfbG9uZy5KUEc_/MTczMDIwMTk1MA' },
 
-const PRINT_CATEGORIES = [
-  { name: 'Bagh', label: 'Bagh', href: '/collections/bridal-sarees', emoji: '👰', color: 'from-rose-100 to-pink-200', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop' },
-  { name: 'Batik', label: 'Batik', href: '/collections/silk-sarees', emoji: '✨', color: 'from-amber-100 to-yellow-200', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&h=500&fit=crop' },
-  { name: 'Bagru', label: 'Bagru', href: '/collections/designer-sarees', emoji: '💎', color: 'from-purple-100 to-violet-200', image: 'https://imgs.search.brave.com/JQAJvr47DXRUg4wPpY_9vOo94PIW6pNL3elWH_bEIsc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGlk/aXlhYS5jb20vY2Ru/L3Nob3AvZmlsZXMv/aW1nXzE4NTYuanBn/P3Y9MTc0NjAxNjc0/MSZ3aWR0aD0yMzI4' },
-  { name: 'Chanderi', label: 'Chanderi', href: '/collections/cotton-sarees', emoji: '🌿', color: 'from-green-100 to-emerald-200', image: 'https://imgs.search.brave.com/JKKLwF-VowSj8EFFlCF9SPfFOTROu75fqbmab-AoUBU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Ymlzd2FiYW5nbGEu/aW4vd3AtY29udGVu/dC91cGxvYWRzLzIw/MjYvMDQvMzU1NDVf/RFNDXzYwMjhfQmlz/d2EtQmFuZ2xhLTQw/MHg2MTcud2VicA' },
-  { name: 'Dabu', label: 'Dabu', href: '/collections/banarasi-sarees', emoji: '🏛️', color: 'from-blue-100 to-indigo-200', image: 'https://imgs.search.brave.com/6ece-6xPvT97g8UiUq60EKmkO8oGte1mv5oZaoHNa08/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMwLm1pcnJhdy5j/b20vaW1hZ2VzLzEy/OTM0MTg3L2dyZWVu/XzFfbG9uZy5KUEc_/MTczMDIwMTk1MA' },
-  { name: 'Zari-Zardozi', label: 'Zari-Zardozi', href: '/collections/casual-sarees', emoji: '🌸', color: 'from-pink-100 to-rose-200', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=500&fit=crop' },
-];
+  // Fabrics
+  Bridal: { emoji: '👰', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop' },
+  Silk: { emoji: '✨', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&h=500&fit=crop' },
+  Designer: { emoji: '💎', image: 'https://imgs.search.brave.com/JQAJvr47DXRUg4wPpY_9vOo94PIW6pNL3elWH_bEIsc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jaGlk/aXlhYS5jb20vY2Ru/L3Nob3AvZmlsZXMv/aW1nXzE4NTYuanBn/P3Y9MTc0NjAxNjc0/MSZ3aWR0aD0yMzI4' },
+  Cotton: { emoji: '🌿', image: 'https://imgs.search.brave.com/JKKLwF-VowSj8EFFlCF9SPfFOTROu75fqbmab-AoUBU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93d3cu/Ymlzd2FiYW5nbGEu/aW4vd3AtY29udGVu/dC91cGxvYWRzLzIw/MjYvMDQvMzU1NDVf/RFNDXzYwMjhfQmlz/d2EtQmFuZ2xhLTQw/MHg2MTcud2VicA' },
+  Banarasi: { emoji: '🏛️', image: 'https://imgs.search.brave.com/6ece-6xPvT97g8UiUq60EKmkO8oGte1mv5oZaoHNa08/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9hc3Nl/dHMwLm1pcnJhdy5j/b20vaW1hZ2VzLzEy/OTM0MTg3L2dyZWVu/XzFfbG9uZy5KUEc_/MTczMDIwMTk1MA' },
+  Casual: { emoji: '🌸', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=400&h=500&fit=crop' },
+};
+
+const getCategoryMeta = (cat) => {
+  const nameKey = cat.name.trim();
+  const defaults = FALLBACK_CATEGORIES[nameKey] || FALLBACK_CATEGORIES[nameKey.split(' ')[0]] || {
+    emoji: '🌸',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&h=500&fit=crop'
+  };
+  return {
+    emoji: cat.icon || defaults.emoji,
+    image: cat.image?.url || defaults.image
+  };
+};
 
 const FEATURES = [
   { icon: Truck, title: 'Free Shipping', desc: 'On orders above ₹999', color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -64,6 +79,15 @@ const ProductSkeleton = () => (
 export default function Home() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('featured');
+  const printScrollRef = useRef(null);
+  const fabricScrollRef = useRef(null);
+
+  const scroll = (ref, direction) => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -350 : 350;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const { data: banners, isLoading: bannersLoading } = useQuery({
     queryKey: ['banners', 'hero'],
@@ -82,6 +106,40 @@ export default function Home() {
     new: homepage?.newArrivals || [],
     bestseller: homepage?.bestSellers || [],
   };
+
+  const GRADIENTS = [
+    'from-rose-100 to-pink-200',
+    'from-amber-100 to-yellow-200',
+    'from-purple-100 to-violet-200',
+    'from-green-100 to-emerald-200',
+    'from-blue-100 to-indigo-200',
+    'from-pink-100 to-rose-200'
+  ];
+
+  const { data: printCategoriesData } = useQuery({
+    queryKey: ['categories', 'print'],
+    queryFn: () => categoryAPI.getAll({ type: 'print' }).then((r) => r.data.categories),
+  });
+  const printCategories = printCategoriesData || [];
+
+  const { data: fabricCategoriesData } = useQuery({
+    queryKey: ['categories', 'fabric'],
+    queryFn: () => categoryAPI.getAll({ type: 'fabric' }).then((r) => r.data.categories),
+  });
+  const fabricCategories = fabricCategoriesData || [];
+
+  const prepareMarqueeList = (list) => {
+    if (!list || list.length === 0) return [];
+    const repeats = Math.ceil(18 / list.length);
+    let result = [];
+    for (let r = 0; r < repeats; r++) {
+      result = [...result, ...list.map((item, idx) => ({ ...item, uniqueKey: `${item._id || idx}-${r}` }))];
+    }
+    return result;
+  };
+
+  const printMarqueeItems = prepareMarqueeList(printCategories);
+  const fabricMarqueeItems = prepareMarqueeList(fabricCategories);
 
   const fallbackBanners = [
     { _id: '1', title: 'New Bridal Collection 2025', subtitle: 'Crafted for Your Moment', description: 'Discover exclusive bridal sarees from India\'s finest weavers', link: '/collections/bridal-sarees', buttonText: 'Explore Bridal', bgColor: '#2d1b3d', textColor: '#f8e8f0', image: { url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1400&h=700&fit=crop' } },
@@ -179,34 +237,65 @@ export default function Home() {
           <h2 className="section-heading">Shop by their print</h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 py-5 px-5">
-          {PRINT_CATEGORIES.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
+        {printCategories.length === 0 ? (
+          <div className="flex gap-4 py-5 px-5 overflow-hidden">
+            {Array(6).fill(0).map((_, idx) => (
+              <div key={idx} className="w-36 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
+            ))}
+          </div>
+        ) : (
+          <div className="page-container relative group px-4 sm:px-6 lg:px-8">
+            {/* Left Button */}
+            <button
+              onClick={() => scroll(printScrollRef, 'left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md hover:bg-white border border-gray-100 flex items-center justify-center text-saree-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex"
+              aria-label="Scroll Left"
             >
-              <Link
-                to={cat.href}
-                className="group flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
-              >
-                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover:shadow-card-hover transition-shadow">
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{cat.emoji}</span>
-                </div>
-                <span className="font-semibold text-sm text-saree-charcoal group-hover:text-saree-rose transition-colors text-center">
-                  {cat.label}
-                </span>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* Scroll Container */}
+            <div
+              ref={printScrollRef}
+              className="flex gap-4 overflow-x-auto py-5 px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
+            >
+              {printCategories.map((cat) => {
+                const meta = getCategoryMeta(cat);
+                return (
+                  <div key={cat._id} className="w-36 sm:w-44 flex-shrink-0 snap-start">
+                    <Link
+                      to={`/collections/${cat.slug}`}
+                      className="group/item flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
+                    >
+                      <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover/item:shadow-card-hover transition-shadow">
+                        <img
+                          src={meta.image}
+                          alt={cat.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                        <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{meta.emoji}</span>
+                      </div>
+                      <span className="font-semibold text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Button */}
+            <button
+              onClick={() => scroll(printScrollRef, 'right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md hover:bg-white border border-gray-100 flex items-center justify-center text-saree-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ─── Banner Strip ─── */}
@@ -233,38 +322,69 @@ export default function Home() {
       {/* ─── Shop by Category Grid ─── */}
       <section className="py-14">
         <div className="text-center mb-10">
-          <p className="font-accent text-saree-rose italic text-lg mb-1">Explore by Occasion</p>
-          <h2 className="section-heading">Shop by Category</h2>
+          <p className="font-accent text-saree-rose italic text-lg mb-1">Explore by Fabric Type</p>
+          <h2 className="section-heading">Shop by Fabric</h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 py-5 px-5">
-          {FEATURED_CATEGORIES.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
+        {fabricCategories.length === 0 ? (
+          <div className="flex gap-4 py-5 px-5 overflow-hidden">
+            {Array(6).fill(0).map((_, idx) => (
+              <div key={idx} className="w-36 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
+            ))}
+          </div>
+        ) : (
+          <div className="page-container relative group px-4 sm:px-6 lg:px-8">
+            {/* Left Button */}
+            <button
+              onClick={() => scroll(fabricScrollRef, 'left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md hover:bg-white border border-gray-100 flex items-center justify-center text-saree-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex"
+              aria-label="Scroll Left"
             >
-              <Link
-                to={cat.href}
-                className="group flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
-              >
-                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover:shadow-card-hover transition-shadow">
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{cat.emoji}</span>
-                </div>
-                <span className="font-semibold text-sm text-saree-charcoal group-hover:text-saree-rose transition-colors text-center">
-                  {cat.label}
-                </span>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* Scroll Container */}
+            <div
+              ref={fabricScrollRef}
+              className="flex gap-4 overflow-x-auto py-5 px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
+            >
+              {fabricCategories.map((cat) => {
+                const meta = getCategoryMeta(cat);
+                return (
+                  <div key={cat._id} className="w-36 sm:w-44 flex-shrink-0 snap-start">
+                    <Link
+                      to={`/collections?fabric=${encodeURIComponent(cat.name)}`}
+                      className="group/item flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
+                    >
+                      <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover/item:shadow-card-hover transition-shadow">
+                        <img
+                          src={meta.image}
+                          alt={cat.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                        <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{meta.emoji}</span>
+                      </div>
+                      <span className="font-semibold text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Button */}
+            <button
+              onClick={() => scroll(fabricScrollRef, 'right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md hover:bg-white border border-gray-100 flex items-center justify-center text-saree-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ─── Product Tabs ─── */}

@@ -33,6 +33,14 @@ router.post('/product', protect, adminOnly, upload.array('images', 10), asyncHan
   res.json({ success: true, images });
 }));
 
+router.post('/category', protect, adminOnly, upload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) { res.status(400); throw new Error('No file uploaded'); }
+  const result = await uploadToCloudinary(req.file.buffer, 'categories', {
+    transformation: [{ width: 400, height: 500, crop: 'fill', quality: 'auto' }],
+  });
+  res.json({ success: true, image: { public_id: result.public_id, url: result.secure_url } });
+}));
+
 router.post('/avatar', protect, upload.single('avatar'), asyncHandler(async (req, res) => {
   if (!req.file) { res.status(400); throw new Error('No file uploaded'); }
   const result = await uploadToCloudinary(req.file.buffer, 'avatars', {

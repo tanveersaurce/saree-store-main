@@ -26,6 +26,14 @@ const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const app = express();
 app.set('trust proxy', 1);
 
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+app.use(cors({
+  origin: [process.env.FRONTEND_URL || 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // ─── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -47,14 +55,6 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
 
 // ─── Body Parsers ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));

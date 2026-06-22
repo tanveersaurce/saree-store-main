@@ -18,7 +18,7 @@ const sampleProducts = [
     shortDescription: 'Pure Kanjivaram silk with gold zari peacock border',
     price: 28999,
     discountPrice: 24999,
-    category: 'Kanjivaram Sarees',
+    category: 'Zari-Zardozi',
     fabric: 'Silk',
     occasion: ['Wedding', 'Festival', 'Bridal'],
     images: [
@@ -44,7 +44,7 @@ const sampleProducts = [
     shortDescription: 'Midnight blue Banarasi brocade with silver zari',
     price: 18500,
     discountPrice: 15999,
-    category: 'Banarasi Sarees',
+    category: 'Zari-Zardozi',
     fabric: 'Brocade',
     occasion: ['Wedding', 'Festival', 'Reception', 'Sangeet'],
     images: [
@@ -66,7 +66,7 @@ const sampleProducts = [
     shortDescription: 'Lightweight Chanderi silk-cotton in blush pink',
     price: 8999,
     discountPrice: 6999,
-    category: 'Chanderi Sarees',
+    category: 'Block Print',
     fabric: 'Mixed',
     occasion: ['Festival', 'Casual', 'Puja'],
     images: [
@@ -87,7 +87,7 @@ const sampleProducts = [
     shortDescription: 'Hand-embroidered georgette saree in emerald green',
     price: 12500,
     discountPrice: 9999,
-    category: 'Designer Sarees',
+    category: 'Batik',
     fabric: 'Georgette',
     occasion: ['Party', 'Reception', 'Sangeet'],
     images: [
@@ -106,7 +106,7 @@ const sampleProducts = [
     shortDescription: 'Natural Tussar silk with tribal Warli art prints',
     price: 7500,
     discountPrice: 5999,
-    category: 'Tussar Sarees',
+    category: 'Ajrakh',
     fabric: 'Tussar',
     occasion: ['Casual', 'Festival', 'Office'],
     images: [
@@ -126,7 +126,7 @@ const sampleProducts = [
     shortDescription: 'Hand-painted organza in dreamy lavender',
     price: 15000,
     discountPrice: 12500,
-    category: 'Designer Sarees',
+    category: 'Kalamkari',
     fabric: 'Organza',
     occasion: ['Party', 'Reception', 'Wedding'],
     images: [
@@ -172,16 +172,27 @@ const sampleBanners = [
 ];
 
 const categories = [
-  { name: 'Silk Sarees', slug: 'silk-sarees', order: 1, isFeatured: true, isActive: true },
-  { name: 'Banarasi Sarees', slug: 'banarasi-sarees', order: 2, isFeatured: true, isActive: true },
-  { name: 'Kanjivaram Sarees', slug: 'kanjivaram-sarees', order: 3, isFeatured: true, isActive: true },
-  { name: 'Designer Sarees', slug: 'designer-sarees', order: 4, isFeatured: true, isActive: true },
-  { name: 'Bridal Sarees', slug: 'bridal-sarees', order: 5, isFeatured: true, isActive: true },
-  { name: 'Cotton Sarees', slug: 'cotton-sarees', order: 6, isActive: true },
-  { name: 'Georgette Sarees', slug: 'georgette-sarees', order: 7, isActive: true },
-  { name: 'Chanderi Sarees', slug: 'chanderi-sarees', order: 8, isActive: true },
-  { name: 'Handloom Sarees', slug: 'handloom-sarees', order: 9, isActive: true },
-  { name: 'Party Wear', slug: 'party-wear', order: 10, isActive: true },
+  // Prints
+  { name: 'Bagh', slug: 'bagh', type: 'print', order: 1, isActive: true },
+  { name: 'Batik', slug: 'batik', type: 'print', order: 2, isActive: true },
+  { name: 'Bagru', slug: 'bagru', type: 'print', order: 3, isActive: true },
+  { name: 'Dabu', slug: 'dabu', type: 'print', order: 4, isActive: true },
+  { name: 'Zari-Zardozi', slug: 'zari-zardozi', type: 'print', order: 5, isActive: true },
+  { name: 'Kalamkari', slug: 'kalamkari', type: 'print', order: 6, isActive: true },
+  { name: 'Bandhani', slug: 'bandhani', type: 'print', order: 7, isActive: true },
+  { name: 'Block Print', slug: 'block-print', type: 'print', order: 8, isActive: true },
+  { name: 'Ajrakh', slug: 'ajrakh', type: 'print', order: 9, isActive: true },
+  // Fabrics
+  { name: 'Silk', slug: 'silk', type: 'fabric', order: 1, isActive: true },
+  { name: 'Cotton', slug: 'cotton', type: 'fabric', order: 2, isActive: true },
+  { name: 'Georgette', slug: 'georgette', type: 'fabric', order: 3, isActive: true },
+  { name: 'Chiffon', slug: 'chiffon', type: 'fabric', order: 4, isActive: true },
+  { name: 'Net', slug: 'net', type: 'fabric', order: 5, isActive: true },
+  { name: 'Banarasi', slug: 'banarasi', type: 'fabric', order: 6, isActive: true },
+  { name: 'Brocade', slug: 'brocade', type: 'fabric', order: 7, isActive: true },
+  { name: 'Mixed', slug: 'mixed', type: 'fabric', order: 8, isActive: true },
+  { name: 'Tussar', slug: 'tussar', type: 'fabric', order: 9, isActive: true },
+  { name: 'Organza', slug: 'organza', type: 'fabric', order: 10, isActive: true },
 ];
 
 const seedDB = async () => {
@@ -199,7 +210,7 @@ const seedDB = async () => {
     console.log('👤 Creating admin user...');
     await User.create({
       name: 'Admin User',
-      email: 'admin@sareesaanvi.com',
+      email: 'admin@saaj.com',
       password: 'admin@123',
       role: 'admin',
       isEmailVerified: true,
@@ -228,7 +239,7 @@ const seedDB = async () => {
     console.log(`
 ✅ Database seeded successfully!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👑 Admin:  admin@sareesaanvi.com / admin@123
+👑 Admin:  admin@saaj.com / admin@123
 👤 User:   priya@example.com / user@123
 📦 Products: ${sampleProducts.length}
 🖼️  Banners: ${sampleBanners.length}

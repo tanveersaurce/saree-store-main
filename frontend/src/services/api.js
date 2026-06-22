@@ -123,7 +123,7 @@ export const bannerAPI = {
 
 // ─── Categories API ──────────────────────────────────────────────────────────
 export const categoryAPI = {
-  getAll: () => api.get('/categories'),
+  getAll: (params) => api.get('/categories', { params }),
   create: (data) => api.post('/categories', data),
   update: (id, data) => api.put(`/categories/${id}`, data),
   delete: (id) => api.delete(`/categories/${id}`),
@@ -141,6 +141,8 @@ export const adminAPI = {
 export const uploadAPI = {
   uploadProductImages: (formData) =>
     api.post('/upload/product', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadCategoryImage: (formData) =>
+    api.post('/upload/category', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   uploadAvatar: (formData) =>
     api.post('/upload/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteImage: (publicId) => api.delete(`/upload/product/${publicId}`),

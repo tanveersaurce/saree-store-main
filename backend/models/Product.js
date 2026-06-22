@@ -59,7 +59,7 @@ const productSchema = new mongoose.Schema(
     fabric: {
       type: String,
       required: [true, 'Fabric type is required'],
-      enum: ['Silk', 'Cotton', 'Georgette', 'Chiffon', 'Net', 'Satin', 'Linen', 'Banarasi', 'Tussar', 'Organza', 'Crepe', 'Velvet', 'Brocade', 'Mixed'],
+      trim: true,
     },
     printTechniques: [{
       type: String,

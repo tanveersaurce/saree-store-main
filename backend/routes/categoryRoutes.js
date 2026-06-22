@@ -5,7 +5,11 @@ const { Category } = require('../models/index');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 router.get('/', asyncHandler(async (req, res) => {
-  const categories = await Category.find({ isActive: true }).sort('order name');
+  const filter = { isActive: true };
+  if (req.query.type) {
+    filter.type = req.query.type;
+  }
+  const categories = await Category.find(filter).sort('order name');
   res.json({ success: true, categories });
 }));
 

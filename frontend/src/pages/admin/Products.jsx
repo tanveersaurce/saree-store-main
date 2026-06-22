@@ -56,18 +56,40 @@ export default function AdminProducts() {
 
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [categoryNameInput, setCategoryNameInput] = useState('');
+  const [categoryImage, setCategoryImage] = useState(null);
+  const [categoryImagePreview, setCategoryImagePreview] = useState('');
   const [savingCategory, setSavingCategory] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+  const [manageType, setManageType] = useState('print'); // 'print' or 'fabric'
 
-  const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [savingCategoryInline, setSavingCategoryInline] = useState(false);
-
-  const { data: categoriesData } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoryAPI.getAll().then((r) => r.data.categories),
+  const { data: printCategoriesData } = useQuery({
+    queryKey: ['categories', 'print'],
+    queryFn: () => categoryAPI.getAll({ type: 'print' }).then((r) => r.data.categories),
   });
-  const categoriesList = categoriesData || [];
+  const printCategories = printCategoriesData || [];
+
+  const { data: fabricCategoriesData } = useQuery({
+    queryKey: ['categories', 'fabric'],
+    queryFn: () => categoryAPI.getAll({ type: 'fabric' }).then((r) => r.data.categories),
+  });
+  const fabricCategories = fabricCategoriesData || [];
+
+  const openCategoryManager = (type) => {
+    setManageType(type);
+    setCategoryNameInput('');
+    setCategoryImage(null);
+    setCategoryImagePreview('');
+    setShowCategoryForm(true);
+  };
+
+  const closeCategoryManager = () => {
+    if (categoryImagePreview) {
+      URL.revokeObjectURL(categoryImagePreview);
+    }
+    setCategoryImage(null);
+    setCategoryImagePreview('');
+    setShowCategoryForm(false);
+  };
 
   const handleSaveCategory = async () => {
     if (!categoryNameInput.trim()) {
@@ -76,18 +98,33 @@ export default function AdminProducts() {
     }
     setSavingCategory(true);
     try {
+      let uploadedImage = null;
+      if (categoryImage) {
+        const formData = new FormData();
+        formData.append('image', categoryImage);
+        const uploadRes = await uploadAPI.uploadCategoryImage(formData);
+        uploadedImage = uploadRes.data.image;
+      }
+
       const slug = categoryNameInput.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const payload = {
         name: categoryNameInput.trim(),
         slug,
+        type: manageType,
         isActive: true,
+        image: uploadedImage || undefined,
       };
       await categoryAPI.create(payload);
       qc.invalidateQueries(['categories']);
-      toast.success('Category added successfully!');
+      toast.success(`${manageType === 'print' ? 'Print' : 'Fabric'} category added successfully!`);
       setCategoryNameInput('');
+      setCategoryImage(null);
+      if (categoryImagePreview) {
+        URL.revokeObjectURL(categoryImagePreview);
+      }
+      setCategoryImagePreview('');
     } catch (err) {
-      // Handled by api interceptor
+      console.error(err);
     } finally {
       setSavingCategory(false);
     }
@@ -104,32 +141,6 @@ export default function AdminProducts() {
       // Handled by api interceptor
     } finally {
       setDeletingCategoryId(null);
-    }
-  };
-
-  const handleCreateCategoryInline = async () => {
-    if (!newCategoryName.trim()) {
-      toast.error('Category name cannot be empty');
-      return;
-    }
-    setSavingCategoryInline(true);
-    try {
-      const slug = newCategoryName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const payload = {
-        name: newCategoryName.trim(),
-        slug,
-        isActive: true,
-      };
-      await categoryAPI.create(payload);
-      qc.invalidateQueries(['categories']);
-      toast.success('Category added successfully!');
-      set('category', newCategoryName.trim());
-      setShowCategoryInput(false);
-      setNewCategoryName('');
-    } catch (err) {
-      // Handled by api interceptor
-    } finally {
-      setSavingCategoryInline(false);
     }
   };
 
@@ -246,7 +257,6 @@ export default function AdminProducts() {
             <p className="text-gray-400 text-sm">{data?.pagination?.total || 0} total products</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowCategoryForm(true)} className="btn-secondary gap-2 py-2.5"><Plus size={15} /> Add Category</button>
             <button onClick={openCreate} className="btn-primary gap-2 py-2.5"><Plus size={15} /> Add Product</button>
           </div>
         </div>
@@ -432,64 +442,39 @@ export default function AdminProducts() {
                   <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)} className="input-field" placeholder="e.g. Kanjivaram Silk Saree - Royal Gold" />
                 </div>
                 <div>
-                  <label className="input-label">Category *</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="input-label mb-0">Categories by Print *</label>
+                    <button type="button" onClick={() => openCategoryManager('print')} className="text-xs text-saree-rose hover:underline font-semibold">
+                      Manage Prints
+                    </button>
+                  </div>
                   <select
                     value={form.category}
-                    onChange={(e) => {
-                      if (e.target.value === 'ADD_NEW_CATEGORY_OPTION') {
-                        setShowCategoryInput(true);
-                        setNewCategoryName('');
-                      } else {
-                        set('category', e.target.value);
-                        setShowCategoryInput(false);
-                      }
-                    }}
+                    onChange={(e) => set('category', e.target.value)}
                     className="input-field"
                   >
-                    <option value="">Select category</option>
-                    {categoriesList.length > 0
-                      ? categoriesList.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)
-                      : CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)
-                    }
-                    <option value="ADD_NEW_CATEGORY_OPTION" className="text-saree-rose font-semibold">+ Add Category</option>
+                    <option value="">Select print technique</option>
+                    {printCategories.map((c) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
-
-                  {showCategoryInput && (
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="text"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="Enter new category name..."
-                        className="input-field py-1.5 text-sm"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCreateCategoryInline}
-                        disabled={savingCategoryInline}
-                        className="btn-primary py-1.5 px-4 text-xs flex-shrink-0"
-                      >
-                        {savingCategoryInline ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCategoryInput(false);
-                          set('category', '');
-                        }}
-                        className="btn-secondary py-1.5 px-3 text-xs flex-shrink-0"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
                 </div>
                 <div>
-                  <label className="input-label">Fabric *</label>
-                  <select value={form.fabric} onChange={(e) => set('fabric', e.target.value)} className="input-field">
-                    <option value="">Select fabric</option>
-                    {FABRICS.map((f) => <option key={f} value={f}>{f}</option>)}
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="input-label mb-0">Categories by Fabric *</label>
+                    <button type="button" onClick={() => openCategoryManager('fabric')} className="text-xs text-saree-rose hover:underline font-semibold">
+                      Manage Fabrics
+                    </button>
+                  </div>
+                  <select
+                    value={form.fabric}
+                    onChange={(e) => set('fabric', e.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">Select fabric category</option>
+                    {fabricCategories.map((c) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -536,30 +521,6 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              <div>
-                <label className="input-label">Print Techniques</label>
-                <div className="flex flex-wrap gap-2">
-                  {PRINT_TECHNIQUES.map((pt) => (
-                    <button
-                      key={pt}
-                      type="button"
-                      onClick={() => {
-                        const current = Array.isArray(form.printTechniques) ? form.printTechniques : [];
-                        set('printTechniques', current.includes(pt)
-                          ? current.filter((x) => x !== pt)
-                          : [...current, pt]);
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                        Array.isArray(form.printTechniques) && form.printTechniques.includes(pt)
-                          ? 'bg-saree-rose text-white border-saree-rose'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-saree-rose'
-                      }`}
-                    >
-                      {pt}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
 
               <div>
@@ -597,18 +558,27 @@ export default function AdminProducts() {
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
-              <h2 className="font-display text-xl font-bold text-saree-charcoal">Categories</h2>
-              <button onClick={() => setShowCategoryForm(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">✕</button>
+              <h2 className="font-display text-xl font-bold text-saree-charcoal">
+                {manageType === 'print' ? 'Categories by Print' : 'Categories by Fabric'}
+              </h2>
+              <button onClick={closeCategoryManager} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">✕</button>
             </div>
 
             {/* Body: list of existing categories with delete button */}
-            <div className="my-4 max-h-60 overflow-y-auto space-y-2 pr-1">
-              {categoriesList.length === 0 ? (
+            <div className="my-4 max-h-48 overflow-y-auto space-y-2 pr-1">
+              {(manageType === 'print' ? printCategories : fabricCategories).length === 0 ? (
                 <p className="text-gray-400 text-sm text-center py-4">No categories found</p>
               ) : (
-                categoriesList.map((cat) => (
+                (manageType === 'print' ? printCategories : fabricCategories).map((cat) => (
                   <div key={cat._id} className="flex items-center justify-between bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100">
-                    <span className="text-sm font-medium text-saree-charcoal">{cat.name}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {cat.image?.url ? (
+                        <img src={cat.image.url} alt={cat.name} className="w-8 h-8 rounded-lg object-cover bg-saree-blush flex-shrink-0" />
+                      ) : (
+                        <span className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-xs flex-shrink-0">🖼️</span>
+                      )}
+                      <span className="text-sm font-medium text-saree-charcoal truncate">{cat.name}</span>
+                    </div>
                     <button
                       type="button"
                       disabled={deletingCategoryId === cat._id}
@@ -626,30 +596,71 @@ export default function AdminProducts() {
               )}
             </div>
 
-            {/* Footer: input box + save button to add new category */}
-            <div className="border-t border-gray-100 pt-4 mt-4">
-              <label className="input-label mb-2">+ Add Category</label>
-              <div className="flex gap-2">
+            {/* Footer: input box + image upload + save button to add new category */}
+            <div className="border-t border-gray-100 pt-4 mt-4 space-y-3">
+              <h3 className="font-semibold text-sm text-saree-charcoal">
+                {manageType === 'print' ? 'Add New Print Category' : 'Add New Fabric Category'}
+              </h3>
+              
+              <div>
+                <label className="input-label text-xs">Category Name *</label>
                 <input
                   type="text"
                   value={categoryNameInput}
                   onChange={(e) => setCategoryNameInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSaveCategory();
-                    }
-                  }}
-                  placeholder="Enter category name..."
+                  placeholder={manageType === 'print' ? "e.g. Ajrakh" : "e.g. Silk"}
                   className="input-field py-2 text-sm"
                 />
+              </div>
+
+              <div>
+                <label className="input-label text-xs">Category Image</label>
+                {categoryImagePreview ? (
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                    <img src={categoryImagePreview} alt="Category preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryImage(null);
+                        setCategoryImagePreview('');
+                      }}
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600 transition-colors"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 px-3 py-1.5 border border-dashed border-gray-300 hover:border-saree-rose bg-gray-50 rounded-xl cursor-pointer transition-colors w-fit">
+                    <Upload size={14} className="text-gray-400" />
+                    <span className="text-xs text-gray-500 font-medium">Select Image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setCategoryImage(file);
+                          setCategoryImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={handleSaveCategory}
                   disabled={savingCategory}
-                  className="btn-primary py-2 px-5 text-sm flex-shrink-0"
+                  className="btn-primary w-full py-2.5 text-sm flex justify-center items-center gap-2"
                 >
-                  {savingCategory ? 'Saving...' : 'Save'}
+                  {savingCategory ? (
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Add Category'
+                  )}
                 </button>
               </div>
             </div>

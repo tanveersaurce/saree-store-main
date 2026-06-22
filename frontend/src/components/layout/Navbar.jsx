@@ -23,8 +23,8 @@ export default function Navbar({ scrolled }) {
   const wishlistCount = productIds instanceof Set ? productIds.size : (productIds?.length || 0);
 
   const { data: categoriesData } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoryAPI.getAll().then((r) => r.data.categories),
+    queryKey: ['categories', 'print'],
+    queryFn: () => categoryAPI.getAll({ type: 'print' }).then((r) => r.data.categories),
   });
   const categories = categoriesData || [];
 

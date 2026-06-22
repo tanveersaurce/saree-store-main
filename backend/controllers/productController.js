@@ -18,9 +18,13 @@ const getProducts = asyncHandler(async (req, res) => {
     filter.$text = { $search: keyword };
   }
 
-  if (category) filter.category = { $in: category.split(',') };
+  const categoryList = [];
+  if (category) categoryList.push(...category.split(','));
+  if (req.query.print) categoryList.push(...req.query.print.split(','));
+  if (categoryList.length > 0) {
+    filter.category = { $in: categoryList };
+  }
   if (fabric) filter.fabric = { $in: fabric.split(',') };
-  if (req.query.print) filter.printTechniques = { $in: req.query.print.split(',') };
   if (occasion) filter.occasion = { $in: occasion.split(',') };
   if (minPrice || maxPrice) {
     filter.$or = [

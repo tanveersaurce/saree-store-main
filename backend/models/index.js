@@ -92,6 +92,7 @@ const Banner = mongoose.model('Banner', bannerSchema);
 const categorySchema = new mongoose.Schema(
   {
     name: { type: String, required: true, unique: true, trim: true },
+    type: { type: String, enum: ['print', 'fabric'], default: 'print' },
     slug: { type: String, unique: true },
     description: { type: String, default: '' },
     image: { public_id: String, url: String },
