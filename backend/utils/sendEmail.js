@@ -9,15 +9,18 @@ const sendEmail = async ({ to, subject, template, data, html, text }) => {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
     },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
   });
 
   const templates = {
     emailVerification: (d) => `
       <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #fdf8f5; padding: 40px; border-radius: 12px;">
-        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center; margin-bottom: 8px;">SareeSaanvi</h1>
+        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center; margin-bottom: 8px;">Saaj✨</h1>
         <p style="color: #666; text-align: center; margin-bottom: 32px;">Premium Sarees & Ethnic Wear</p>
         <h2 style="color: #2d1b3d;">Welcome, ${d.name}! 🌸</h2>
-        <p style="color: #444; line-height: 1.8;">Thank you for joining SareeSaanvi. Please verify your email to get started.</p>
+        <p style="color: #444; line-height: 1.8;">Thank you for joining Saaj✨. Please verify your email to get started.</p>
         <div style="text-align: center; margin: 32px 0;">
           <a href="${d.url}" style="background: linear-gradient(135deg, #8b1a4a, #c2185b); color: white; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 16px;">Verify Email</a>
         </div>
@@ -26,7 +29,7 @@ const sendEmail = async ({ to, subject, template, data, html, text }) => {
     `,
     passwordReset: (d) => `
       <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #fdf8f5; padding: 40px; border-radius: 12px;">
-        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center;">SareeSaanvi</h1>
+        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center;">Saaj✨</h1>
         <h2 style="color: #2d1b3d;">Password Reset Request</h2>
         <p style="color: #444; line-height: 1.8;">Hi ${d.name}, you requested a password reset.</p>
         <div style="text-align: center; margin: 32px 0;">
@@ -37,7 +40,7 @@ const sendEmail = async ({ to, subject, template, data, html, text }) => {
     `,
     orderConfirmation: (d) => `
       <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #fdf8f5; padding: 40px; border-radius: 12px;">
-        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center;">SareeSaanvi</h1>
+        <h1 style="color: #8b1a4a; font-size: 28px; text-align: center;">Saaj✨</h1>
         <h2 style="color: #2d1b3d;">Order Confirmed! 🎉</h2>
         <p style="color: #444;">Order #${d.orderNumber} has been placed successfully.</p>
         <p style="color: #444;">Total: ₹${d.totalPrice}</p>
@@ -51,16 +54,28 @@ const sendEmail = async ({ to, subject, template, data, html, text }) => {
     : html || `<p>${text}</p>`;
 
   const mailOptions = {
-    from: `"${process.env.FROM_NAME || 'SareeSaanvi'}" <${process.env.FROM_EMAIL || process.env.SMTP_EMAIL}>`,
+    from: `"${process.env.FROM_NAME || 'Saaj✨'}" <${process.env.FROM_EMAIL || process.env.SMTP_EMAIL}>`,
     to,
     subject,
     html: htmlContent,
     text: text || htmlContent.replace(/<[^>]*>/g, ''),
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`📧 Email sent: ${info.messageId}`);
-  return info;
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Email sent: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    console.error('❌ SMTP Email Delivery failed:', err.message);
+    console.log('📬 --- LOG FALLBACK EMAIL CONTENT ---');
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    if (data?.url) {
+      console.log(`URL/Link: ${data.url}`);
+    }
+    console.log('-------------------------------------');
+    throw err;
+  }
 };
 
 module.exports = { sendEmail };

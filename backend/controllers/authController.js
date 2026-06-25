@@ -26,6 +26,8 @@ const register = asyncHandler(async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    console.log('🔑 Email Verification URL:', verificationUrl);
+
     await sendEmail({
       to: user.email,
       subject: 'Welcome to SareeSaanvi - Verify your email',
@@ -33,7 +35,7 @@ const register = asyncHandler(async (req, res) => {
       data: { name: user.name, url: verificationUrl },
     });
   } catch (err) {
-    console.error('Email send error:', err);
+    console.error('Email send error:', err.message);
   }
   
 });
@@ -138,11 +140,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
     });
     res.json({ success: true, message: 'Password reset email sent' });
   } catch (err) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save({ validateBeforeSave: false });
-    res.status(500);
-    throw new Error('Email could not be sent. Please try again.');
+    console.error('Password Reset Email send error:', err.message);
+    console.log('🔑 Password Reset URL:', resetUrl);
+    res.json({
+      success: true,
+      message: 'Password reset request processed. (Check server logs if the email does not arrive.)',
+      devLink: process.env.NODE_ENV === 'development' ? resetUrl : undefined
+    });
   }
 });
 
