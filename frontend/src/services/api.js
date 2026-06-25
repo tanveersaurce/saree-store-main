@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
-  : 'https://saree-store-main-backend.onrender.com/api';
+  : 'saree-store-main-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
