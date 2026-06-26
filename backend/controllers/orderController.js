@@ -80,6 +80,28 @@ const createOrder = asyncHandler(async (req, res) => {
 
   const populatedOrder = await Order.findById(order._id).populate('user', 'name email phone');
 
+  // Send order confirmation email for COD immediately
+  if (paymentMethod === 'cod') {
+    const { sendEmail } = require('../utils/sendEmail');
+    try {
+      await sendEmail({
+        to: populatedOrder.user.email,
+        subject: `Order #${populatedOrder.orderNumber} Confirmed! - Saaj`,
+        template: 'orderConfirmation',
+        data: {
+          orderNumber: populatedOrder.orderNumber,
+          totalPrice: populatedOrder.totalPrice,
+          estimatedDelivery: new Date(populatedOrder.estimatedDelivery).toLocaleDateString('en-IN', {
+            day: 'numeric', month: 'short', year: 'numeric',
+          }),
+        },
+      });
+      console.log(`📬 Order confirmation email sent to ${populatedOrder.user.email} for COD Order #${populatedOrder.orderNumber}`);
+    } catch (err) {
+      console.error('❌ Failed to send COD order confirmation email:', err.message);
+    }
+  }
+
   res.status(201).json({ success: true, message: 'Order placed successfully', order: populatedOrder });
 });
 
@@ -142,6 +164,27 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, {
     $inc: { loyaltyPoints: updatedOrder.loyaltyPointsEarned, totalOrders: 1, totalSpent: updatedOrder.totalPrice },
   });
+
+  // Send order confirmation email for online payments
+  const { sendEmail } = require('../utils/sendEmail');
+  try {
+    const populatedUser = await User.findById(order.user);
+    await sendEmail({
+      to: populatedUser.email,
+      subject: `Order #${updatedOrder.orderNumber} Confirmed! - Saaj`,
+      template: 'orderConfirmation',
+      data: {
+        orderNumber: updatedOrder.orderNumber,
+        totalPrice: updatedOrder.totalPrice,
+        estimatedDelivery: new Date(updatedOrder.estimatedDelivery).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric',
+        }),
+      },
+    });
+    console.log(`📬 Order confirmation email sent to ${populatedUser.email} for Paid Order #${updatedOrder.orderNumber}`);
+  } catch (err) {
+    console.error('❌ Failed to send online order confirmation email:', err.message);
+  }
 
   res.json({ success: true, message: 'Payment confirmed', order: updatedOrder });
 });

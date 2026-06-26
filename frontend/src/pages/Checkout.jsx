@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
-import { MapPin, CreditCard, Wallet, Truck, ChevronRight, Plus, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, CreditCard, Wallet, Truck, ChevronRight, Plus, Check, CheckCircle, ArrowRight } from 'lucide-react';
 import { useCartStore, useAuthStore } from '../context/store';
-import { orderAPI, paymentAPI } from '../services/api';
+import { orderAPI, paymentAPI, authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 const formatPrice = (p) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p);
@@ -14,7 +14,7 @@ const STEPS = ['Address', 'Payment', 'Review'];
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -26,6 +26,9 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [newAddress, setNewAddress] = useState({ fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', label: 'Home' });
   const [showNewAddr, setShowNewAddr] = useState(false);
+  const [showCodPopup, setShowCodPopup] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState('');
+  const [createdOrderNumber, setCreatedOrderNumber] = useState('');
 
   useEffect(() => {
     if (user?.addresses?.length) {
@@ -86,14 +89,42 @@ export default function Checkout() {
 
       if (paymentMethod === 'razorpay') {
         await handleRazorpay(orderId);
+        clearCart();
+        navigate(`/order-success/${orderId}`);
       } else if (paymentMethod === 'cod') {
-        // COD - order is created pending
+        setCreatedOrderId(orderId);
+        setCreatedOrderNumber(data.order.orderNumber);
+        setShowCodPopup(true);
+        clearCart();
       }
-
-      clearCart();
-      navigate(`/order-success/${orderId}`);
     } catch (err) {
       if (err.message !== 'Payment cancelled') toast.error('Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNewAddress = async () => {
+    if (!newAddress.fullName || !newAddress.phone || !newAddress.addressLine1 || !newAddress.city || !newAddress.state || !newAddress.pincode) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data } = await authAPI.addAddress(newAddress);
+      updateUser({ addresses: data.addresses });
+      
+      // Select the newly added address
+      const newlyAdded = data.addresses[data.addresses.length - 1];
+      setSelectedAddress(newlyAdded);
+      
+      toast.success('Address saved successfully!');
+      setShowNewAddr(false);
+      // Reset new address form fields
+      setNewAddress({ fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', label: 'Home' });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save address');
     } finally {
       setLoading(false);
     }
@@ -182,12 +213,33 @@ export default function Checkout() {
                         </div>
                       ))}
                     </div>
-                    <button onClick={() => { setSelectedAddress(newAddress); toast.success('Address saved'); }}
-                      className="btn-primary py-2 px-6 text-sm">Use This Address</button>
+                    <div>
+                      <label className="input-label">Address Type (Label)</label>
+                      <div className="flex gap-3 mb-4">
+                        {['Home', 'Work', 'Other'].map((lbl) => (
+                          <button
+                            key={lbl}
+                            type="button"
+                            onClick={() => setNewAddress({ ...newAddress, label: lbl })}
+                            className={`py-1.5 px-4 rounded-xl text-xs font-semibold border-2 transition-all ${newAddress.label === lbl ? 'border-saree-rose bg-pink-50 text-saree-rose' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                          >
+                            {lbl}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <button onClick={handleAddNewAddress} disabled={loading}
+                      className="btn-primary py-2 px-6 text-sm">
+                      {loading ? (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        'Save & Use This Address'
+                      )}
+                    </button>
                   </motion.div>
                 )}
 
-                <button onClick={() => setStep(1)} disabled={!selectedAddress && !newAddress.fullName} className="btn-primary w-full py-3.5 mt-4">
+                <button onClick={() => setStep(1)} disabled={!selectedAddress} className="btn-primary w-full py-3.5 mt-4">
                   Continue to Payment <ChevronRight size={16} />
                 </button>
               </motion.div>
@@ -276,6 +328,65 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* COD Order Confirmation Popup */}
+      <AnimatePresence>
+        {showCodPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => navigate(`/order-success/${createdOrderId}`)}
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full relative z-10 shadow-2xl border border-gray-100 text-center"
+            >
+              {/* Success Checkmark Circle */}
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <CheckCircle size={40} className="text-green-500 animate-pulse" />
+              </div>
+
+              <h2 className="font-display text-2xl font-bold text-saree-charcoal mb-2">Order Confirmed! 🎉</h2>
+              <p className="text-gray-500 text-sm mb-6">
+                Your beautiful sarees have been booked. Thank you for shopping with Saaj!
+              </p>
+
+              {/* Mini Summary Box */}
+              <div className="bg-saree-blush/40 rounded-2xl p-4 mb-6 text-left border border-pink-100/50">
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Order Number</span>
+                  <span className="font-mono font-semibold text-saree-charcoal">{createdOrderNumber}</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Payment Mode</span>
+                  <span className="font-semibold text-saree-charcoal">Cash on Delivery (COD)</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 border-t border-pink-100/50 pt-2 mt-2 font-bold text-sm">
+                  <span className="text-saree-charcoal">Total Amount</span>
+                  <span className="text-saree-rose">{formatPrice(grandTotal)}</span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => navigate(`/order-success/${createdOrderId}`)}
+                className="btn-primary w-full py-3.5 text-base rounded-2xl flex items-center justify-center gap-2"
+              >
+                Track Order <ArrowRight size={16} />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -20,7 +20,7 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <div className="page-container py-20 text-center">
-        <Helmet><title>My Cart | SareeSaanvi</title></Helmet>
+        <Helmet><title>My Cart | Saaj</title></Helmet>
         <div className="w-24 h-24 bg-saree-blush rounded-full flex items-center justify-center mx-auto mb-6">
           <ShoppingBag size={40} className="text-saree-rose/50" />
         </div>
@@ -33,7 +33,7 @@ export default function Cart() {
 
   return (
     <>
-      <Helmet><title>My Cart ({itemCount}) | SareeSaanvi</title></Helmet>
+      <Helmet><title>{`My Cart (${itemCount}) | Saaj`}</title></Helmet>
       <div className="page-container py-10">
         <h1 className="font-display text-2xl md:text-3xl font-bold text-saree-charcoal mb-8">
           Shopping Bag <span className="text-saree-rose">({itemCount})</span>

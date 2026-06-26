@@ -262,7 +262,7 @@ export default function Login() {
           <div className="relative z-10 px-10 pb-8 text-right">
             <p className="text-white/60 text-xs">
               New to Saaj?{' '}
-              <Link to="/register" className="text-white font-bold hover:underline underline-offset-2">
+              <Link to={redirect !== '/' ? `/register?redirect=${encodeURIComponent(redirect)}` : '/register'} className="text-white font-bold hover:underline underline-offset-2">
                 Create account
               </Link>
             </p>

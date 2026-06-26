@@ -177,7 +177,7 @@ export function OrderDetail() {
 
   return (
     <>
-      <Helmet><title>Order #{order.orderNumber} | Saaj</title></Helmet>
+      <Helmet><title>{`Order #${order.orderNumber} | Saaj`}</title></Helmet>
       <div className="page-container py-10 max-w-3xl">
         <div className="flex items-center gap-3 mb-8">
           <Link to="/orders" className="text-gray-400 hover:text-saree-rose text-sm transition-colors">

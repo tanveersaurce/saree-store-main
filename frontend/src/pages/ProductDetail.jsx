@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, Share2, Check, ChevronDown, Minus, Plus, Maximize2
 } from 'lucide-react';
 import { productAPI } from '../services/api';
-import { useCartStore, useWishlistStore } from '../context/store';
+import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '../context/store';
 import ProductCard from '../components/product/ProductCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 const formatPrice = (p) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p);
 
 export default function ProductDetail() {
+  const navigate = useNavigate();
   const { slug } = useParams();
   const [activeImg, setActiveImg] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -28,6 +29,8 @@ export default function ProductDetail() {
 
   const { addToCart } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const { openCart } = useUIStore();
+  const { isAuthenticated } = useAuthStore();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['product', slug],
@@ -48,9 +51,17 @@ export default function ProductDetail() {
   const wishlisted = isWishlisted(product._id);
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     setAdding(true);
-    await addToCart(product._id, quantity, selectedColor);
+    const success = await addToCart(product._id, quantity, selectedColor);
     setAdding(false);
+    if (success) {
+      openCart();
+    }
   };
 
   const checkPincode = () => {
@@ -80,7 +91,7 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>{product.name} | Saaj</title>
+        <title>{`${product.name} | Saaj`}</title>
         <meta name="description" content={product.shortDescription || product.description?.slice(0, 160)} />
       </Helmet>
 

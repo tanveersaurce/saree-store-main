@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, Star, Eye, Zap } from 'lucide-react';
-import { useCartStore, useWishlistStore, useAuthStore } from '../../context/store';
+import { useCartStore, useWishlistStore, useAuthStore, useUIStore } from '../../context/store';
 import toast from 'react-hot-toast';
 
 const formatPrice = (price) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
 export default function ProductCard({ product, index = 0 }) {
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const [imgIdx, setImgIdx] = useState(0);
   const [adding, setAdding] = useState(false);
@@ -15,6 +16,7 @@ export default function ProductCard({ product, index = 0 }) {
   const { addToCart } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
   const { isAuthenticated } = useAuthStore();
+  const { openCart } = useUIStore();
 
   const wishlisted = isWishlisted(product._id);
   const mainImage = product.images?.[0]?.url || 'https://via.placeholder.com/400x500?text=Saree';
@@ -24,9 +26,17 @@ export default function ProductCard({ product, index = 0 }) {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     setAdding(true);
-    await addToCart(product._id, 1);
+    const success = await addToCart(product._id, 1);
     setAdding(false);
+    if (success) {
+      openCart();
+    }
   };
 
   const handleWishlist = (e) => {

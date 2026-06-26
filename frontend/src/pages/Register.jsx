@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../context/store';
@@ -37,6 +37,8 @@ const formItemVariants = {
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/';
   const { register: registerUser, loading } = useAuthStore();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '', gender: '' });
   const [showPwd, setShowPwd] = useState(false);
@@ -57,7 +59,7 @@ export default function Register() {
     e.preventDefault();
     if (!validate()) return;
     const result = await registerUser({ name: form.name, email: form.email, password: form.password, phone: form.phone, gender: form.gender });
-    if (result.success) navigate('/', { replace: true });
+    if (result.success) navigate(redirect, { replace: true });
     else setErrors({ form: result.message });
   };
 
@@ -273,7 +275,7 @@ export default function Register() {
           <div className="relative z-10 px-10 pb-8 text-right">
             <p className="text-white/60 text-xs">
               Already a customer?{' '}
-              <Link to="/login" className="text-white font-bold hover:underline underline-offset-2">
+              <Link to={redirect !== '/' ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} className="text-white font-bold hover:underline underline-offset-2">
                 Sign in
               </Link>
             </p>
