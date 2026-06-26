@@ -94,7 +94,7 @@ const productSchema = new mongoose.Schema(
       default: 'Dry clean only',
     },
     tags: [{ type: String, trim: true, lowercase: true }],
-    brand: { type: String, default: 'SareeSaanvi Original' },
+    brand: { type: String, default: 'Saaj Original' },
     origin: { type: String, default: 'India' },
     isFeatured: { type: Boolean, default: false },
     isTrending: { type: Boolean, default: false },

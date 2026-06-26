@@ -30,7 +30,7 @@ const register = asyncHandler(async (req, res) => {
 
     await sendEmail({
       to: user.email,
-      subject: 'Welcome to SareeSaanvi - Verify your email',
+      subject: 'Welcome to Saaj - Verify your email',
       template: 'emailVerification',
       data: { name: user.name, url: verificationUrl },
     });
@@ -134,7 +134,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   try {
     await sendEmail({
       to: user.email,
-      subject: 'SareeSaanvi - Password Reset Request',
+      subject: 'Saaj - Password Reset Request',
       template: 'passwordReset',
       data: { name: user.name, url: resetUrl },
     });
@@ -156,14 +156,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+  const user = await User.findOne({ resetPasswordToken });
 
   if (!user) {
+    console.error(`❌ Password Reset Failed: No user matches token hash ${resetPasswordToken}`);
     res.status(400);
-    throw new Error('Invalid or expired reset token');
+    throw new Error('Invalid reset token. It may have been overwritten by a newer request.');
+  }
+
+  if (user.resetPasswordExpire < Date.now()) {
+    console.error(`❌ Password Reset Failed: Token for ${user.email} has expired.`);
+    res.status(400);
+    throw new Error('Reset token has expired');
   }
 
   user.password = req.body.password;
@@ -171,6 +175,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordExpire = undefined;
   await user.save();
 
+  console.log(`✅ Password Reset Succeeded for user: ${user.email}`);
   sendTokenResponse(user, 200, res, 'Password reset successful');
 });
 
