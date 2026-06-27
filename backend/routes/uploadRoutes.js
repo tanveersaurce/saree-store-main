@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const asyncHandler = require('express-async-handler');
 const multer = require('multer');
+const sharp = require('sharp');
 const cloudinary = require('../config/cloudinary');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -27,7 +28,18 @@ const uploadToCloudinary = (buffer, folder, options = {}) =>
 router.post('/product', protect, adminOnly, upload.array('images', 10), asyncHandler(async (req, res) => {
   if (!req.files?.length) { res.status(400); throw new Error('No files uploaded'); }
   const uploads = await Promise.all(
-    req.files.map((file) => uploadToCloudinary(file.buffer, 'products', { transformation: [{ width: 800, height: 1000, crop: 'fill', quality: 'auto' }] }))
+    req.files.map(async (file) => {
+      let buffer = file.buffer;
+      try {
+        buffer = await sharp(file.buffer)
+          .resize(1000, 1250, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 80, progressive: true })
+          .toBuffer();
+      } catch (err) {
+        console.error('Error compressing product image:', err.message);
+      }
+      return uploadToCloudinary(buffer, 'products', { transformation: [{ width: 800, height: 1000, crop: 'fill', quality: 'auto' }] });
+    })
   );
   const images = uploads.map((u) => ({ public_id: u.public_id, url: u.secure_url }));
   res.json({ success: true, images });
@@ -35,7 +47,16 @@ router.post('/product', protect, adminOnly, upload.array('images', 10), asyncHan
 
 router.post('/category', protect, adminOnly, upload.single('image'), asyncHandler(async (req, res) => {
   if (!req.file) { res.status(400); throw new Error('No file uploaded'); }
-  const result = await uploadToCloudinary(req.file.buffer, 'categories', {
+  let buffer = req.file.buffer;
+  try {
+    buffer = await sharp(req.file.buffer)
+      .resize(600, 750, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80, progressive: true })
+      .toBuffer();
+  } catch (err) {
+    console.error('Error compressing category image:', err.message);
+  }
+  const result = await uploadToCloudinary(buffer, 'categories', {
     transformation: [{ width: 400, height: 500, crop: 'fill', quality: 'auto' }],
   });
   res.json({ success: true, image: { public_id: result.public_id, url: result.secure_url } });
@@ -43,7 +64,16 @@ router.post('/category', protect, adminOnly, upload.single('image'), asyncHandle
 
 router.post('/avatar', protect, upload.single('avatar'), asyncHandler(async (req, res) => {
   if (!req.file) { res.status(400); throw new Error('No file uploaded'); }
-  const result = await uploadToCloudinary(req.file.buffer, 'avatars', {
+  let buffer = req.file.buffer;
+  try {
+    buffer = await sharp(req.file.buffer)
+      .resize(300, 300, { fit: 'cover' })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+  } catch (err) {
+    console.error('Error compressing avatar image:', err.message);
+  }
+  const result = await uploadToCloudinary(buffer, 'avatars', {
     transformation: [{ width: 200, height: 200, crop: 'fill', gravity: 'face' }],
   });
   const User = require('../models/User');
