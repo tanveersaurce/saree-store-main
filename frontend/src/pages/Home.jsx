@@ -165,7 +165,8 @@ export default function Home() {
           pagination={{ clickable: true }}
           navigation
           loop
-          className="h-[480px] sm:h-[560px] lg:h-[680px]"
+          // FIX: Mobile pe height kam, tablet pe medium, desktop pe full
+          className="h-[320px] sm:h-[440px] lg:h-[680px]"
         >
           {displayBanners.map((banner) => (
             <SwiperSlide key={banner._id}>
@@ -185,20 +186,25 @@ export default function Home() {
                       initial={{ opacity: 0, x: -40 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.8 }}
-                      className="max-w-xl"
+                      // FIX: Mobile pe max-width zyada tight, padding adjust
+                      className="max-w-xs sm:max-w-sm md:max-w-xl px-1"
                     >
-                      <p className="font-accent text-saree-gold text-lg italic mb-2">{banner.subtitle}</p>
-                      <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
+                      {/* FIX: subtitle mobile pe chota */}
+                      <p className="font-accent text-saree-gold text-sm sm:text-base lg:text-lg italic mb-1">{banner.subtitle}</p>
+                      {/* FIX: Hero heading mobile pe 2xl, tablet 3xl, desktop 6xl */}
+                      <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2 sm:mb-4">
                         {banner.title}
                       </h1>
-                      <p className="text-white/80 text-base mb-8 leading-relaxed max-w-md">
+                      {/* FIX: description mobile pe hide karo ya chota karo */}
+                      <p className="text-white/80 text-xs sm:text-sm lg:text-base mb-4 sm:mb-8 leading-relaxed max-w-xs sm:max-w-md hidden sm:block">
                         {banner.description}
                       </p>
-                      <div className="flex gap-3 flex-wrap">
-                        <Link to={banner.link || '/collections'} className="btn-primary text-base px-7 py-3.5">
-                          {banner.buttonText || 'Shop Now'} <ArrowRight size={17} />
+                      {/* FIX: Buttons mobile pe chote */}
+                      <div className="flex gap-2 sm:gap-3 flex-wrap">
+                        <Link to={banner.link || '/collections'} className="btn-primary text-xs sm:text-sm lg:text-base px-4 sm:px-6 lg:px-7 py-2.5 sm:py-3 lg:py-3.5">
+                          {banner.buttonText || 'Shop Now'} <ArrowRight size={14} />
                         </Link>
-                        <Link to="/collections" className="btn-secondary border-white/70 text-white hover:bg-white hover:text-saree-rose text-base px-7 py-3.5">
+                        <Link to="/collections" className="btn-secondary border-white/70 text-white hover:bg-white hover:text-saree-rose text-xs sm:text-sm lg:text-base px-4 sm:px-6 lg:px-7 py-2.5 sm:py-3 lg:py-3.5">
                           View All
                         </Link>
                       </div>
@@ -213,16 +219,19 @@ export default function Home() {
 
       {/* ─── Features Bar ─── */}
       <section className="bg-white border-y border-gray-100">
-        <div className="page-container py-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* FIX: Mobile pe 2x2 grid, desktop pe 4 col — padding adjust */}
+        <div className="page-container py-4 sm:py-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {FEATURES.map(({ icon: Icon, title, desc, color, bg }) => (
-              <div key={title} className="flex items-center gap-3">
-                <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                  <Icon size={18} className={color} />
+              <div key={title} className="flex items-center gap-2 sm:gap-3">
+                {/* FIX: Icon size mobile pe thoda chota */}
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 ${bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  <Icon size={15} className={color} />
                 </div>
-                <div>
-                  <p className="font-semibold text-saree-charcoal text-sm">{title}</p>
-                  <p className="text-gray-400 text-xs">{desc}</p>
+                <div className="min-w-0">
+                  <p className="font-semibold text-saree-charcoal text-xs sm:text-sm leading-tight">{title}</p>
+                  {/* FIX: desc mobile pe hide — nahi to truncate */}
+                  <p className="text-gray-400 text-xs hidden sm:block">{desc}</p>
                 </div>
               </div>
             ))}
@@ -231,21 +240,22 @@ export default function Home() {
       </section>
 
       {/* ─── Shop by their print Grid ─── */}
-      <section className="py-14">
-        <div className="text-center mb-10">
-          <p className="font-accent text-saree-rose italic text-lg mb-1">Explore by Printing Techniques</p>
-          <h2 className="section-heading">Shop by their print</h2>
+      {/* FIX: Section padding mobile pe kam */}
+      <section className="py-10 sm:py-14">
+        <div className="text-center mb-6 sm:mb-10 px-4">
+          <p className="font-accent text-saree-rose italic text-sm sm:text-lg mb-1">Explore by Printing Techniques</p>
+          <h2 className="section-heading text-xl sm:text-3xl">Shop by their print</h2>
         </div>
 
         {printCategories.length === 0 ? (
-          <div className="flex gap-4 py-5 px-5 overflow-hidden">
+          <div className="flex gap-3 sm:gap-4 py-5 px-5 overflow-hidden">
             {Array(6).fill(0).map((_, idx) => (
-              <div key={idx} className="w-36 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
+              <div key={idx} className="w-28 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
             ))}
           </div>
         ) : (
           <div className="page-container relative group px-4 sm:px-6 lg:px-8">
-            {/* Left Button */}
+            {/* Left Button - desktop only */}
             <button
               onClick={() => scroll(printScrollRef, 'left')}
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-md hover:bg-white border border-gray-100 flex items-center justify-center text-saree-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex"
@@ -257,15 +267,16 @@ export default function Home() {
             {/* Scroll Container */}
             <div
               ref={printScrollRef}
-              className="flex gap-4 overflow-x-auto py-5 px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
+              className="flex gap-3 sm:gap-4 overflow-x-auto py-4 sm:py-5 px-1 sm:px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
             >
               {printCategories.map((cat) => {
                 const meta = getCategoryMeta(cat);
                 return (
-                  <div key={cat._id} className="w-36 sm:w-44 flex-shrink-0 snap-start">
+                  // FIX: Mobile pe card width 28, sm pe 36, md pe 44
+                  <div key={cat._id} className="w-28 sm:w-36 md:w-44 flex-shrink-0 snap-start">
                     <Link
                       to={`/collections/${cat.slug}`}
-                      className="group/item flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
+                      className="group/item flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
                     >
                       <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover/item:shadow-card-hover transition-shadow">
                         <img
@@ -275,9 +286,9 @@ export default function Home() {
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                        <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{meta.emoji}</span>
+                        <span className="absolute bottom-2 left-0 right-0 text-center text-lg sm:text-2xl">{meta.emoji}</span>
                       </div>
-                      <span className="font-semibold text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
+                      <span className="font-semibold text-xs sm:text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
                         {cat.name}
                       </span>
                     </Link>
@@ -298,20 +309,22 @@ export default function Home() {
         )}
       </section>
 
-      {/* ─── Banner Strip ─── */}
-      <section className="p-10 ">
-        <div className="">
+      {/* ─── Banner Strip (Single) ─── */}
+      {/* FIX: Padding mobile pe kam, height responsive */}
+      <section className="px-4 sm:px-10 py-6 sm:py-10">
+        <div>
           {[
             { title: 'New Arrivals', sub: 'Fresh styles just added', cta: 'See What\'s New', href: '/collections?filter=new', image: 'https://github.com/tanveersaurce/sareeImg/blob/main/banner.png?raw=true' },
           ].map((banner) => (
-            <Link key={banner.title} to={banner.href} className="group relative rounded-3xl overflow-hidden h-56 block">
+            <Link key={banner.title} to={banner.href} className="group relative rounded-3xl overflow-hidden h-40 sm:h-56 block">
               <img src={banner.image} alt={banner.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className={`absolute inset-0 bg-gradient-to-r ${banner.bg} opacity-70`} />
-              <div className="absolute inset-0 flex flex-col justify-center pl-8">
-                <p className="font-accent text-white/70 italic text-base mb-1">{banner.sub}</p>
-                <h3 className="font-display text-2xl font-bold text-white mb-4">{banner.title}</h3>
-                <span className="inline-flex items-center gap-2 bg-white text-saree-rose font-semibold text-sm px-4 py-2 rounded-full w-fit group-hover:shadow-lg transition-shadow">
-                  {banner.cta} <ArrowRight size={14} />
+              <div className="absolute inset-0 flex flex-col justify-center pl-5 sm:pl-8">
+                {/* FIX: Sub text mobile pe chota */}
+                <p className="font-accent text-white/70 italic text-xs sm:text-base mb-1">{banner.sub}</p>
+                <h3 className="font-display text-lg sm:text-2xl font-bold text-white mb-3 sm:mb-4">{banner.title}</h3>
+                <span className="inline-flex items-center gap-1.5 sm:gap-2 bg-white text-saree-rose font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit group-hover:shadow-lg transition-shadow">
+                  {banner.cta} <ArrowRight size={12} />
                 </span>
               </div>
             </Link>
@@ -319,17 +332,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Shop by Category Grid ─── */}
-      <section className="py-14">
-        <div className="text-center mb-10">
-          <p className="font-accent text-saree-rose italic text-lg mb-1">Explore by Fabric Type</p>
-          <h2 className="section-heading">Shop by Fabric</h2>
+      {/* ─── Shop by Fabric Grid ─── */}
+      <section className="py-10 sm:py-14">
+        <div className="text-center mb-6 sm:mb-10 px-4">
+          <p className="font-accent text-saree-rose italic text-sm sm:text-lg mb-1">Explore by Fabric Type</p>
+          <h2 className="section-heading text-xl sm:text-3xl">Shop by Fabric</h2>
         </div>
 
         {fabricCategories.length === 0 ? (
-          <div className="flex gap-4 py-5 px-5 overflow-hidden">
+          <div className="flex gap-3 sm:gap-4 py-5 px-5 overflow-hidden">
             {Array(6).fill(0).map((_, idx) => (
-              <div key={idx} className="w-36 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
+              <div key={idx} className="w-28 sm:w-44 flex-shrink-0 rounded-2xl overflow-hidden skeleton aspect-[3/4]" />
             ))}
           </div>
         ) : (
@@ -346,15 +359,15 @@ export default function Home() {
             {/* Scroll Container */}
             <div
               ref={fabricScrollRef}
-              className="flex gap-4 overflow-x-auto py-5 px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
+              className="flex gap-3 sm:gap-4 overflow-x-auto py-4 sm:py-5 px-1 sm:px-2 scroll-smooth snap-x snap-mandatory mask-gradient-x no-scrollbar"
             >
               {fabricCategories.map((cat) => {
                 const meta = getCategoryMeta(cat);
                 return (
-                  <div key={cat._id} className="w-36 sm:w-44 flex-shrink-0 snap-start">
+                  <div key={cat._id} className="w-28 sm:w-36 md:w-44 flex-shrink-0 snap-start">
                     <Link
                       to={`/collections?fabric=${encodeURIComponent(cat.name)}`}
-                      className="group/item flex flex-col items-center gap-3 p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
+                      className="group/item flex flex-col items-center gap-2 sm:gap-3 p-2 sm:p-4 rounded-2xl hover:bg-saree-blush transition-all duration-300"
                     >
                       <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-card group-hover/item:shadow-card-hover transition-shadow">
                         <img
@@ -364,9 +377,9 @@ export default function Home() {
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                        <span className="absolute bottom-2 left-0 right-0 text-center text-2xl">{meta.emoji}</span>
+                        <span className="absolute bottom-2 left-0 right-0 text-center text-lg sm:text-2xl">{meta.emoji}</span>
                       </div>
-                      <span className="font-semibold text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
+                      <span className="font-semibold text-xs sm:text-sm text-saree-charcoal group-hover/item:text-saree-rose transition-colors text-center truncate w-full">
                         {cat.name}
                       </span>
                     </Link>
@@ -388,16 +401,16 @@ export default function Home() {
       </section>
 
       {/* ─── Product Tabs ─── */}
-      <section className="bg-gradient-saree py-14">
+      <section className="bg-gradient-saree py-10 sm:py-14">
         <div className="page-container">
-          <div className="text-center mb-8">
-            <p className="font-accent text-saree-rose italic text-lg mb-1">Handpicked for You</p>
-            <h2 className="section-heading">Our Collection</h2>
+          <div className="text-center mb-6 sm:mb-8 px-4">
+            <p className="font-accent text-saree-rose italic text-sm sm:text-lg mb-1">Handpicked for You</p>
+            <h2 className="section-heading text-xl sm:text-3xl">Our Collection</h2>
           </div>
 
-          {/* Tabs */}
-          <div className="flex justify-center mb-8 overflow-x-auto pb-1">
-            <div className="flex gap-1 bg-white rounded-2xl p-1 shadow-sm">
+          {/* FIX: Tabs — horizontal scroll on mobile, no wrapping */}
+          <div className="flex justify-start sm:justify-center mb-6 sm:mb-8 overflow-x-auto pb-1 no-scrollbar px-4 sm:px-0">
+            <div className="flex gap-1 bg-white rounded-2xl p-1 shadow-sm flex-shrink-0">
               {[
                 { key: 'featured', label: '⭐ Featured' },
                 { key: 'trending', label: '🔥 Trending' },
@@ -407,7 +420,8 @@ export default function Home() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                  // FIX: Mobile pe text aur padding chota
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'bg-gradient-to-r from-saree-rose to-saree-crimson text-white shadow-sm'
                       : 'text-gray-500 hover:text-saree-rose'
@@ -421,11 +435,11 @@ export default function Home() {
 
           {/* Products Grid */}
           {productsLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-0">
               {Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
             </div>
           ) : tabProducts[activeTab].length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-0">
               {tabProducts[activeTab].slice(0, 8).map((product, i) => (
                 <ProductCard key={product._id} product={product} index={i} />
               ))}
@@ -434,29 +448,30 @@ export default function Home() {
             <p className="text-center text-gray-400 py-12">No products in this collection yet.</p>
           )}
 
-          <div className="text-center mt-10">
-            <Link to="/collections" className="btn-secondary inline-flex items-center gap-2 px-8 py-3.5">
+          <div className="text-center mt-8 sm:mt-10">
+            <Link to="/collections" className="btn-secondary inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base">
               Explore All Collections <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ─── Banner Strip ─── */}
-      <section className="page-container py-10">
-        <div className="grid sm:grid-cols-2 gap-5">
+      {/* ─── Banner Strip (Double) ─── */}
+      <section className="page-container py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+        {/* FIX: Mobile pe single col, sm pe 2 col */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {[
             { title: 'Bridal Special', sub: 'Curated for your big day', cta: 'Shop Bridal', href: '/collections/bridal-sarees', bg: 'from-rose-900 to-pink-700', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&h=280&fit=crop' },
             { title: 'New Arrivals', sub: 'Fresh styles just added', cta: 'See What\'s New', href: '/collections?filter=new', bg: 'from-purple-900 to-indigo-700', image: 'https://imgs.search.brave.com/caMW2hrlcpPMZ3P8N5SoTt5DpgEpOURh3ny3u4QHIDQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzM0L2Ji/L2I5LzM0YmJiOTJi/OGYyYWNlNDZmMTM3/ZTFkNzM0MDZkZjg5/LmpwZw' },
           ].map((banner) => (
-            <Link key={banner.title} to={banner.href} className="group relative rounded-3xl overflow-hidden h-56 block">
+            <Link key={banner.title} to={banner.href} className="group relative rounded-3xl overflow-hidden h-44 sm:h-56 block">
               <img src={banner.image} alt={banner.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className={`absolute inset-0 bg-gradient-to-r ${banner.bg} opacity-70`} />
-              <div className="absolute inset-0 flex flex-col justify-center pl-8">
-                <p className="font-accent text-white/70 italic text-base mb-1">{banner.sub}</p>
-                <h3 className="font-display text-2xl font-bold text-white mb-4">{banner.title}</h3>
-                <span className="inline-flex items-center gap-2 bg-white text-saree-rose font-semibold text-sm px-4 py-2 rounded-full w-fit group-hover:shadow-lg transition-shadow">
-                  {banner.cta} <ArrowRight size={14} />
+              <div className="absolute inset-0 flex flex-col justify-center pl-5 sm:pl-8">
+                <p className="font-accent text-white/70 italic text-xs sm:text-base mb-1">{banner.sub}</p>
+                <h3 className="font-display text-lg sm:text-2xl font-bold text-white mb-3 sm:mb-4">{banner.title}</h3>
+                <span className="inline-flex items-center gap-1.5 sm:gap-2 bg-white text-saree-rose font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit group-hover:shadow-lg transition-shadow">
+                  {banner.cta} <ArrowRight size={12} />
                 </span>
               </div>
             </Link>
@@ -465,32 +480,33 @@ export default function Home() {
       </section>
 
       {/* ─── Testimonials ─── */}
-      <section className="bg-saree-charcoal py-14">
-        <div className="page-container">
-          <div className="text-center mb-10">
-            <p className="font-accent text-saree-gold italic text-lg mb-1">Stories from our Community</p>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-white">What Our Customers Say</h2>
+      <section className="bg-saree-charcoal py-10 sm:py-14">
+        <div className="page-container px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-10">
+            <p className="font-accent text-saree-gold italic text-sm sm:text-lg mb-1">Stories from our Community</p>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white">What Our Customers Say</h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* FIX: Mobile pe single col, tablet 2 col, desktop 3 col */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {TESTIMONIALS.map((t, i) => (
               <motion.div
                 key={t.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
+                className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6"
               >
-                <div className="flex mb-3">
+                <div className="flex mb-2 sm:mb-3">
                   {Array(t.rating).fill(0).map((_, s) => (
-                    <Star key={s} size={14} className="text-saree-gold" fill="currentColor" />
+                    <Star key={s} size={13} className="text-saree-gold" fill="currentColor" />
                   ))}
                 </div>
-                <p className="text-white/80 text-sm leading-relaxed mb-4 italic">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                <p className="text-white/80 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 italic">"{t.text}"</p>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <img src={t.avatar} alt={t.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
                   <div>
-                    <p className="font-semibold text-white text-sm">{t.name}</p>
+                    <p className="font-semibold text-white text-xs sm:text-sm">{t.name}</p>
                     <p className="text-white/50 text-xs">{t.location}</p>
                   </div>
                 </div>
@@ -501,22 +517,22 @@ export default function Home() {
       </section>
 
       {/* ─── CTA Section ─── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-saree-blush via-pink-50 to-purple-50 py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-saree-blush via-pink-50 to-purple-50 py-12 sm:py-16">
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-saree-rose/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-300/20 rounded-full blur-2xl" />
-        <div className="page-container relative text-center">
-          <Sparkles className="w-8 h-8 text-saree-gold mx-auto mb-4 animate-float" />
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-saree-charcoal mb-3">
+        <div className="page-container relative text-center px-4 sm:px-6">
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-saree-gold mx-auto mb-3 sm:mb-4 animate-float" />
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-saree-charcoal mb-2 sm:mb-3">
             Find Your Perfect Saree
           </h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto">
+          <p className="text-gray-500 mb-6 sm:mb-8 max-w-xs sm:max-w-md mx-auto text-sm sm:text-base">
             Browse over 500+ handpicked sarees from India's finest weavers. Every piece is a work of art.
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link to="/collections" className="btn-primary px-8 py-3.5 text-base gap-2">
-              Shop Now <ArrowRight size={17} />
+          <div className="flex gap-2 sm:gap-3 justify-center flex-wrap">
+            <Link to="/collections" className="btn-primary px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base gap-2">
+              Shop Now <ArrowRight size={15} />
             </Link>
-            <Link to="/collections/bridal-sarees" className="btn-secondary px-8 py-3.5 text-base">
+            <Link to="/collections/bridal-sarees" className="btn-secondary px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base">
               Bridal Collection
             </Link>
           </div>
