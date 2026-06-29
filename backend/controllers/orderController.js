@@ -13,29 +13,55 @@ const createOrder = asyncHandler(async (req, res) => {
     res.status(400); throw new Error('No order items');
   }
 
-  // Validate items and calculate prices
+  // Validate items, atomically reduce stock, and calculate prices
   const orderItems = [];
   let itemsPrice = 0;
+  const reducedItems = [];
 
-  for (const item of items) {
-    const product = await Product.findById(item.product);
-    if (!product) { res.status(404); throw new Error(`Product not found: ${item.product}`); }
-    if (product.stock < item.quantity) {
-      res.status(400);
-      throw new Error(`Insufficient stock for: ${product.name}`);
+  try {
+    for (const item of items) {
+      // Atomically decrement stock if it is greater than or equal to quantity requested
+      const product = await Product.findOneAndUpdate(
+        { _id: item.product, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity, soldCount: item.quantity } },
+        { new: true }
+      );
+
+      if (!product) {
+        // Double-check if product exists at all to provide accurate error message
+        const exists = await Product.findById(item.product);
+        if (!exists) {
+          res.status(404);
+          throw new Error(`Product not found: ${item.product}`);
+        } else {
+          res.status(400);
+          throw new Error(`Insufficient stock for: ${exists.name}`);
+        }
+      }
+
+      // Track successful stock reductions for potential rollback
+      reducedItems.push({ product: item.product, quantity: item.quantity });
+
+      const price = product.discountPrice || product.price;
+      orderItems.push({
+        product: product._id,
+        name: product.name,
+        image: product.images[0]?.url || '',
+        price,
+        quantity: item.quantity,
+        color: item.color || '',
+        sku: product.sku || '',
+      });
+      itemsPrice += price * item.quantity;
     }
-
-    const price = product.discountPrice || product.price;
-    orderItems.push({
-      product: product._id,
-      name: product.name,
-      image: product.images[0]?.url || '',
-      price,
-      quantity: item.quantity,
-      color: item.color || '',
-      sku: product.sku || '',
-    });
-    itemsPrice += price * item.quantity;
+  } catch (error) {
+    // ROLLBACK: If any item in the order fails, restore stock for all previously reduced items
+    for (const reduced of reducedItems) {
+      await Product.findByIdAndUpdate(reduced.product, {
+        $inc: { stock: reduced.quantity, soldCount: -reduced.quantity },
+      });
+    }
+    throw error;
   }
 
   // Shipping (free above ₹999)
@@ -67,13 +93,6 @@ const createOrder = asyncHandler(async (req, res) => {
     estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     loyaltyPointsEarned: Math.floor(totalPrice / 100),
   });
-
-  // Reduce stock
-  for (const item of orderItems) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { stock: -item.quantity, soldCount: item.quantity },
-    });
-  }
 
   // Clear cart
   await Cart.findOneAndUpdate({ user: req.user._id }, { items: [] });
