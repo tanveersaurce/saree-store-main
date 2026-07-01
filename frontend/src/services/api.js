@@ -107,9 +107,8 @@ export const reviewAPI = {
 
 // ─── Payment API ──────────────────────────────────────────────────────────────
 export const paymentAPI = {
-  createRazorpayOrder: (amount) => api.post('/payment/razorpay/create-order', { amount }),
-  verifyRazorpay: (data) => api.post('/payment/razorpay/verify', data),
-  getRazorpayKey: () => api.get('/payment/razorpay/key'),
+  createEasebuzzOrder: (orderId, amount) => api.post('/payment/easebuzz/create-order', { orderId, amount }),
+  verifyEasebuzz: (data) => api.post('/payment/easebuzz/verify', data),
   createStripeIntent: (amount) => api.post('/payment/stripe/create-intent', { amount }),
 };
 

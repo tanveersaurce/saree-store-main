@@ -23,7 +23,7 @@ export default function Checkout() {
   const grandTotal = total + shipping + tax;
 
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState('easebuzz');
   const [newAddress, setNewAddress] = useState({ fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', label: 'Home' });
   const [showNewAddr, setShowNewAddr] = useState(false);
   const [showCodPopup, setShowCodPopup] = useState(false);
@@ -39,33 +39,38 @@ export default function Checkout() {
     }
   }, [user]);
 
-  if (items.length === 0) { navigate('/cart'); return null; }
+  useEffect(() => {
+    if (items.length === 0) {
+      navigate('/cart');
+    }
+  }, [items, navigate]);
 
-  const handleRazorpay = async (orderId) => {
+  if (items.length === 0) return null;
+
+  const handleEasebuzz = async (orderId) => {
     try {
-      const keyRes = await paymentAPI.getRazorpayKey();
-      const rzpOrderRes = await paymentAPI.createRazorpayOrder(grandTotal);
+      const { data } = await paymentAPI.createEasebuzzOrder(orderId, grandTotal);
+      const { accessKey, key, env } = data;
 
       return new Promise((resolve, reject) => {
-        const rzp = new window.Razorpay({
-          key: keyRes.data.key,
-          amount: Math.round(grandTotal * 100),
-          currency: 'INR',
-          name: 'saaj',
-          description: `Order #${orderId}`,
-          order_id: rzpOrderRes.data.order.id,
-          prefill: { name: user?.name, email: user?.email, contact: user?.phone },
-          theme: { color: '#8b1a4a' },
-          handler: async (response) => {
-            try {
-              await paymentAPI.verifyRazorpay(response);
-              await orderAPI.pay(orderId, { ...response, status: 'paid' });
-              resolve();
-            } catch (err) { reject(err); }
+        const easebuzzCheckout = new window.EasebuzzCheckout(key, env);
+        const options = {
+          access_key: accessKey,
+          onResponse: async (response) => {
+            if (response.status === 'success') {
+              try {
+                await paymentAPI.verifyEasebuzz(response);
+                await orderAPI.pay(orderId, { ...response, status: 'paid' });
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            } else {
+              reject(new Error(response.error_desc || 'Payment failed or cancelled'));
+            }
           },
-          modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
-        });
-        rzp.open();
+        };
+        easebuzzCheckout.initiatePayment(options);
       });
     } catch (err) {
       throw err;
@@ -87,8 +92,8 @@ export default function Checkout() {
       const { data } = await orderAPI.create(orderPayload);
       const orderId = data.order._id;
 
-      if (paymentMethod === 'razorpay') {
-        await handleRazorpay(orderId);
+      if (paymentMethod === 'easebuzz') {
+        await handleEasebuzz(orderId);
         clearCart();
         navigate(`/order-success/${orderId}`);
       } else if (paymentMethod === 'cod') {
@@ -250,7 +255,7 @@ export default function Checkout() {
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <h2 className="font-display text-xl font-bold text-saree-charcoal flex items-center gap-2"><CreditCard size={20} className="text-saree-rose" /> Payment Method</h2>
                 {[
-                  { id: 'razorpay', label: 'Razorpay (Cards, UPI, Netbanking)', sub: 'Most secure & trusted', icon: '💳' },
+                  { id: 'easebuzz', label: 'Easebuzz (Cards, UPI, Netbanking)', sub: 'Most secure & trusted & fast', icon: '💳' },
                   { id: 'cod', label: 'Cash on Delivery', sub: 'Pay when you receive your order', icon: '💵' },
                 ].map((method) => (
                   <div key={method.id} onClick={() => setPaymentMethod(method.id)}
