@@ -132,8 +132,8 @@ const getMyOrders = asyncHandler(async (req, res) => {
   const filter = { user: req.user._id };
   if (status) filter.status = status;
 
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Number.parseInt(page);
+  const limitNum = Number.parseInt(limit);
   const skip = (pageNum - 1) * limitNum;
 
   const [orders, total] = await Promise.all([

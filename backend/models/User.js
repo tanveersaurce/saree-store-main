@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 const addressSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Please enter your email'],
       unique: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email'],
     },
     password: {
       type: String,

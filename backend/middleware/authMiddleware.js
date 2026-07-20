@@ -46,12 +46,12 @@ const protect = asyncHandler(async (req, res, next) => {
 
 // ─── Admin only ───────────────────────────────────────────────────────────────
 const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(403);
-    throw new Error('Access denied. Admin only.');
+  if (req.user?.role === 'admin') {
+    return next();
   }
+
+  res.status(403);
+  throw new Error('Access denied. Admin only.');
 };
 
 // ─── Optional auth (attach user if token present) ─────────────────────────────
@@ -64,8 +64,8 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
     } catch (error) {
-      // Continue without user
-    }
+      console.warn('Optional authentication failed:', error.message);
+      }
   }
 
   next();
