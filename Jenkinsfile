@@ -7,10 +7,6 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
-    tools {
-        sonarRunner 'sonar-scanner'
-    }
-
     stages {
 
         stage('Checkout') {
