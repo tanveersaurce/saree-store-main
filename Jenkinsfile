@@ -6,9 +6,9 @@ pipeline {
         FRONTEND_IMAGE = "tanveeraws/saree-frontend"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
-    tools {
-        sonarRunner 'sonar-scanner'
-    }
+    // tools {
+    //     sonarRunner 'sonar-scanner'
+    // }
 
     stages {
 
