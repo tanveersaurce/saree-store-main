@@ -4,7 +4,11 @@ pipeline {
     environment {
         BACKEND_IMAGE = "tanveeraws/saree-backend"
         FRONTEND_IMAGE = "tanveeraws/saree-frontend"
-        IMAGE_TAG = "latest"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+
+    tools {
+        sonarQubeScanner 'sonar-scanner'
     }
 
     stages {
@@ -15,10 +19,18 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh 'sonar-scanner'
+                }
+            }
+        }
+
         stage('Build Backend Image') {
             steps {
                 dir('backend') {
-                    sh 'docker build -t saree-backend:test .'
+                    sh "docker build -t saree-backend:test ."
                 }
             }
         }
@@ -26,7 +38,7 @@ pipeline {
         stage('Build Frontend Image') {
             steps {
                 dir('frontend') {
-                    sh 'docker build -t saree-frontend:test .'
+                    sh "docker build -t saree-frontend:test ."
                 }
             }
         }
@@ -34,7 +46,7 @@ pipeline {
         stage('Docker Hub Login') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'YOUR_DOCKER_CREDENTIAL_ID',
+                    credentialsId: 'dockerhub',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
@@ -48,34 +60,36 @@ pipeline {
 
         stage('Push Backend Image') {
             steps {
-                sh '''
+                sh """
                 docker tag saree-backend:test ${BACKEND_IMAGE}:${IMAGE_TAG}
                 docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
-                '''
+                """
             }
         }
 
         stage('Push Frontend Image') {
             steps {
-                sh '''
+                sh """
                 docker tag saree-frontend:test ${FRONTEND_IMAGE}:${IMAGE_TAG}
                 docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
-                '''
+                """
             }
         }
+
     }
 
     post {
-        always {
-            sh 'docker logout'
-        }
 
         success {
-            echo 'Pipeline completed successfully!'
+            echo "Pipeline Completed Successfully!"
         }
 
         failure {
-            echo 'Pipeline failed!'
+            echo "Pipeline Failed!"
+        }
+
+        always {
+            sh "docker logout"
         }
     }
 }
