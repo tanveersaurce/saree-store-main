@@ -45,6 +45,40 @@ pipeline {
             }
         }
 
+        stage('Trivy Backend Scan') {
+            steps {
+                sh '''
+                mkdir -p trivy-reports
+
+                trivy image \
+                --format table \
+                --output trivy-reports/backend-report.txt \
+                saree-backend:test
+
+                trivy image \
+                --severity CRITICAL \
+                --exit-code 1 \
+                saree-backend:test
+                '''
+            }
+        }
+
+        stage('Trivy Frontend Scan') {
+            steps {
+                sh '''
+                trivy image \
+                --format table \
+                --output trivy-reports/frontend-report.txt \
+                saree-frontend:test
+
+                trivy image \
+                --severity CRITICAL \
+                --exit-code 1 \
+                saree-frontend:test
+                '''
+            }
+        }
+
         stage('Docker Hub Login') {
             steps {
                 withCredentials([usernamePassword(
@@ -81,17 +115,17 @@ pipeline {
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
+            sh 'docker logout'
+        }
 
         success {
-            echo "Pipeline Completed Successfully!"
+            echo 'Pipeline completed successfully!'
         }
 
         failure {
-            echo "Pipeline Failed!"
-        }
-
-        always {
-            sh "docker logout"
+            echo 'Pipeline failed!'
         }
     }
 }
