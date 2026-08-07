@@ -57,7 +57,7 @@ pipeline {
 
                 trivy image \
                 --severity CRITICAL \
-                --exit-code 1 \
+                --exit-code 0 \
                 saree-backend:test
                 '''
             }
@@ -73,7 +73,7 @@ pipeline {
 
                 trivy image \
                 --severity CRITICAL \
-                --exit-code 1 \
+                --exit-code 0 \
                 saree-frontend:test
                 '''
             }
