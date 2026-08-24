@@ -15,18 +15,18 @@ const footerLinks = {
     { name: 'All Collections',  href: '/collections' },
   ],
   help: [
-    { name: 'Size Guide',       href: '/size-guide' },
-    { name: 'Care Instructions',href: '/care' },
-    { name: 'Shipping Policy',  href: '/shipping' },
-    { name: 'Return & Refund',  href: '/returns' },
-    { name: 'Track Order',      href: '/orders' },
+    { name: 'Shipping Policy',          href: '/shipping-policy' },
+    { name: 'Cancellation & Refund',    href: '/cancellation-refund-policy' },
+    { name: 'Return & Replacement',     href: '/return-replacement-policy' },
+    { name: 'Privacy Policy',           href: '/privacy-policy' },
+    { name: 'Terms & Conditions',       href: '/terms-and-conditions' },
   ],
   company: [
-    { name: 'About Us',         href: '/about' },
-    { name: 'Our Weavers',      href: '/weavers' },
-    { name: 'Sustainability',   href: '/sustainability' },
-    { name: 'Blog',             href: '/blog' },
-    { name: 'Contact Us',       href: '/contact' },
+    { name: 'About Us',                 href: '/about-us' },
+    { name: 'Contact Us',               href: '/contact-us' },
+    { name: 'Our Weavers',              href: '/weavers' },
+    { name: 'Sustainability',           href: '/sustainability' },
+    { name: 'Track Order',              href: '/orders' },
   ],
 };
 

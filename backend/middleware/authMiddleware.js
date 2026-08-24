@@ -6,8 +6,11 @@ const User = require('../models/User');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
+  // Extract from Authorization header or HTTP-only cookies
   if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies?.token) {
+    token = req.cookies.token;
   }
 
   if (!token) {
@@ -60,20 +63,32 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
 
   if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies?.token) {
+    token = req.cookies.token;
+  }
+
+  if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
     } catch (error) {
       console.warn('Optional authentication failed:', error.message);
-      }
+    }
   }
 
   next();
 });
 
-// ─── Send JWT token in response ───────────────────────────────────────────────
+// ─── Send JWT token in response (JSON + Secure Cookie) ───────────────────────
 const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
   const token = user.getSignedJwtToken();
+
+  const options = {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    httpOnly: true, // Prevents XSS token theft
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: process.env.NODE_ENV === 'production', // Requires HTTPS in production
+  };
 
   const userObj = {
     _id: user._id,
@@ -86,12 +101,15 @@ const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
     loyaltyPoints: user.loyaltyPoints,
   };
 
-  res.status(statusCode).json({
-    success: true,
-    message,
-    token,
-    user: userObj,
-  });
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      message,
+      token,
+      user: userObj,
+    });
 };
 
 module.exports = { protect, adminOnly, optionalAuth, sendTokenResponse };

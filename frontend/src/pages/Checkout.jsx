@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,9 +26,9 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('easebuzz');
   const [newAddress, setNewAddress] = useState({ fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', label: 'Home' });
   const [showNewAddr, setShowNewAddr] = useState(false);
-  const [showCodPopup, setShowCodPopup] = useState(false);
-  const [createdOrderId, setCreatedOrderId] = useState('');
-  const [createdOrderNumber, setCreatedOrderNumber] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const isOrderPlacedRef = useRef(false);
 
   useEffect(() => {
     if (user?.addresses?.length) {
@@ -40,12 +40,12 @@ export default function Checkout() {
   }, [user]);
 
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !isOrderPlacedRef.current) {
       navigate('/cart');
     }
   }, [items, navigate]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !isOrderPlacedRef.current) return null;
 
   const handleEasebuzz = async (orderId) => {
     try {
@@ -78,6 +78,10 @@ export default function Checkout() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!agreed) {
+      toast.error('Please accept the Terms & Conditions and Privacy Policy to proceed.');
+      return;
+    }
     const addr = selectedAddress || newAddress;
     if (!addr?.fullName || !addr?.addressLine1) { toast.error('Please select a delivery address'); return; }
 
@@ -94,14 +98,13 @@ export default function Checkout() {
 
       if (paymentMethod === 'easebuzz') {
         await handleEasebuzz(orderId);
-        clearCart();
-        navigate(`/order-success/${orderId}`);
-      } else if (paymentMethod === 'cod') {
-        setCreatedOrderId(orderId);
-        setCreatedOrderNumber(data.order.orderNumber);
-        setShowCodPopup(true);
-        clearCart();
       }
+
+      isOrderPlacedRef.current = true;
+      setIsOrderPlaced(true);
+      toast.success('Order placed successfully! 🎉');
+      clearCart();
+      navigate(`/order-success/${orderId}`);
     } catch (err) {
       if (err.message !== 'Payment cancelled') toast.error('Failed to place order. Please try again.');
     } finally {
@@ -307,6 +310,36 @@ export default function Checkout() {
                     ))}
                   </div>
                 </div>
+                <div className="bg-white rounded-2xl p-5 shadow-card border border-gray-100">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="mt-1 accent-saree-rose cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-500 leading-normal">
+                      I agree to the{' '}
+                      <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-saree-rose font-medium hover:underline">
+                        Terms & Conditions
+                      </a>{' '}
+                      and{' '}
+                      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-saree-rose font-medium hover:underline">
+                        Privacy Policy
+                      </a>
+                      . I understand that my order is subject to the{' '}
+                      <a href="/shipping-policy" target="_blank" rel="noopener noreferrer" className="text-saree-rose font-medium hover:underline">
+                        Shipping Policy
+                      </a>{' '}
+                      and{' '}
+                      <a href="/return-replacement-policy" target="_blank" rel="noopener noreferrer" className="text-saree-rose font-medium hover:underline">
+                        Return & Replacement Policy
+                      </a>
+                      .
+                    </span>
+                  </label>
+                </div>
+
                 <div className="flex gap-3">
                   <button onClick={() => setStep(1)} className="btn-secondary py-3 px-6">← Back</button>
                   <button onClick={handlePlaceOrder} disabled={loading} className="btn-primary flex-1 py-3.5 text-base">
@@ -333,65 +366,6 @@ export default function Checkout() {
           </div>
         </div>
       </div>
-
-      {/* COD Order Confirmation Popup */}
-      <AnimatePresence>
-        {showCodPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md"
-              onClick={() => navigate(`/order-success/${createdOrderId}`)}
-            />
-
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full relative z-10 shadow-2xl border border-gray-100 text-center"
-            >
-              {/* Success Checkmark Circle */}
-              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <CheckCircle size={40} className="text-green-500 animate-pulse" />
-              </div>
-
-              <h2 className="font-display text-2xl font-bold text-saree-charcoal mb-2">Order Confirmed! 🎉</h2>
-              <p className="text-gray-500 text-sm mb-6">
-                Your beautiful sarees have been booked. Thank you for shopping with Saaj!
-              </p>
-
-              {/* Mini Summary Box */}
-              <div className="bg-saree-blush/40 rounded-2xl p-4 mb-6 text-left border border-pink-100/50">
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
-                  <span>Order Number</span>
-                  <span className="font-mono font-semibold text-saree-charcoal">{createdOrderNumber}</span>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mb-2">
-                  <span>Payment Mode</span>
-                  <span className="font-semibold text-saree-charcoal">Cash on Delivery (COD)</span>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 border-t border-pink-100/50 pt-2 mt-2 font-bold text-sm">
-                  <span className="text-saree-charcoal">Total Amount</span>
-                  <span className="text-saree-rose">{formatPrice(grandTotal)}</span>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <button
-                onClick={() => navigate(`/order-success/${createdOrderId}`)}
-                className="btn-primary w-full py-3.5 text-base rounded-2xl flex items-center justify-center gap-2"
-              >
-                Track Order <ArrowRight size={16} />
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

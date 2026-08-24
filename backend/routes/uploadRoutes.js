@@ -20,8 +20,19 @@ const uploadToCloudinary = (buffer, folder, options = {}) =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: `saree-store/${folder}`, ...options },
-      (err, result) => { if (err) reject(err); else resolve(result); }
+      (err, result) => {
+        if (err !== undefined && err !== null) {
+          const error = err instanceof Error
+            ? err
+            : new Error('Cloudinary upload failed');
+
+          return reject(error);
+        }
+
+        return resolve(result);
+      }
     );
+
     stream.end(buffer);
   });
 
