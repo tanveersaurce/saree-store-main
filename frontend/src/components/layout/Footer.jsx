@@ -31,7 +31,7 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Instagram, href: '#', label: 'Instagram', color: 'hover:text-pink-400 hover:bg-pink-500/20' },
+  { icon: Instagram, href: 'https://www.instagram.com/saajheritage/', label: 'Instagram', color: 'hover:text-pink-400 hover:bg-pink-500/20' },
   { icon: Facebook,  href: '#', label: 'Facebook',  color: 'hover:text-blue-400 hover:bg-blue-500/20'  },
   { icon: Youtube,   href: '#', label: 'YouTube',   color: 'hover:text-red-400  hover:bg-red-500/20'   },
   { icon: Twitter,   href: '#', label: 'Twitter',   color: 'hover:text-sky-400  hover:bg-sky-500/20'   },
@@ -158,14 +158,14 @@ export default function Footer() {
             {/* Contact info — 2-col on mobile/tablet for compactness */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
               <a
-                href="mailto:hello@saaj.com"
+                href="help@saajheritage.com"
                 className="flex items-center gap-2 text-gray-400 text-sm hover:text-saree-crimson transition-colors"
               >
                 <Mail size={13} className="text-saree-rose/60 flex-shrink-0" />
-                hello@saaj.com
+                help@saajheritage.com
               </a>
               <a
-                href="tel:+911800001234"
+                href="tel:+9198934 69426"
                 className="flex items-center gap-2 text-gray-400 text-sm hover:text-saree-crimson transition-colors"
               >
                 <Phone size={13} className="text-saree-rose/60 flex-shrink-0" />

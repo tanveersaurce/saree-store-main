@@ -86,8 +86,8 @@ export default function TermsConditions() {
               For any clarifications regarding these Terms & Conditions, please contact us at:
             </p>
             <div className="mt-4 p-4 bg-gray-50 rounded-xl text-sm space-y-1">
-              <p><strong>Email:</strong> hello@saaj.com</p>
-              <p><strong>Phone:</strong> +91 1800 001 234</p>
+              <p><strong>Email:</strong> help@saajheritage.com</p>
+              <p><strong>Phone:</strong> +91 98934 69426</p>
               <p><strong>Address:</strong> Bhopal, Madhya Pradesh, India</p>
             </div>
           </section>

@@ -78,8 +78,8 @@ export default function ShippingPolicy() {
           <section className="bg-white rounded-2xl p-6 md:p-8 shadow-card border border-gray-100">
             <h2 className="font-display text-xl font-bold text-saree-charcoal mb-4">8. Customer Support</h2>
             <div className="p-4 bg-gray-50 rounded-xl text-sm space-y-1">
-              <p><strong>Email:</strong> hello@saaj.com</p>
-              <p><strong>Phone:</strong> +91 1800 001 234</p>
+              <p><strong>Email:</strong> help@saajheritage.com</p>
+              <p><strong>Phone:</strong> +91 98934 69426</p>
             </div>
           </section>
         </div>
