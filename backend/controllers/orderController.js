@@ -283,12 +283,12 @@ const getAllOrders = asyncHandler(async (req, res) => {
 // @route   PUT /api/orders/:id/status
 // @access  Admin
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, trackingNumber, trackingUrl, shippingCarrier, message } = req.body;
+  const { status, trackingNumber, trackingUrl, shippingCarrier, message, isPaid } = req.body;
 
   const order = await Order.findById(req.params.id);
   if (!order) { res.status(404); throw new Error('Order not found'); }
 
-  order.status = status;
+  if (status) order.status = status;
   if (trackingNumber) order.trackingNumber = trackingNumber;
   if (trackingUrl) order.trackingUrl = trackingUrl;
   if (shippingCarrier) order.shippingCarrier = shippingCarrier;
@@ -298,8 +298,17 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     order.deliveredAt = Date.now();
   }
 
+  if (typeof isPaid !== 'undefined') {
+    order.isPaid = isPaid;
+    if (isPaid && !order.paidAt) {
+      order.paidAt = Date.now();
+    } else if (!isPaid) {
+      order.paidAt = null;
+    }
+  }
+
   await order.save();
-  res.json({ success: true, message: `Order status updated to ${status}`, order });
+  res.json({ success: true, message: 'Order updated successfully', order });
 });
 
 module.exports = {
