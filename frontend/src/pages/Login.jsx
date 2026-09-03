@@ -181,15 +181,15 @@ export default function Login() {
                 </motion.button>
               </form>
 
-              {/* Demo credentials */}
+              {/* Demo credentials
               <motion.div variants={formItemVariants} className="mt-5 sm:mt-6 p-3 rounded-lg border border-white/15 bg-white/8">
                 <p className="text-white/60 text-[10px] font-semibold uppercase tracking-widest mb-1.5">
                   Demo Credentials
                 </p>
-                {/* FIX: Demo text opacity raised */}
+
                 <p className="text-white/55 text-[11px]">Admin: admin@saaj.com / admin@123</p>
                 <p className="text-white/55 text-[11px]">User: priya@example.com / user@123</p>
-              </motion.div>
+              </motion.div> */}
 
               {/* FIX: "Create account" link — mobile & tablet pe yahan dikhta hai (lg pe right panel me hai) */}
               <motion.div variants={formItemVariants} className="mt-5 text-center lg:hidden">

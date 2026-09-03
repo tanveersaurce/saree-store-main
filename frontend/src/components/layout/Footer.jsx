@@ -169,7 +169,7 @@ export default function Footer() {
                 className="flex items-center gap-2 text-gray-400 text-sm hover:text-saree-crimson transition-colors"
               >
                 <Phone size={13} className="text-saree-rose/60 flex-shrink-0" />
-                +91 1800 001 234
+                +91 98934 69426
               </a>
               <span className="flex items-center gap-2 text-gray-400 text-sm sm:col-span-2 lg:col-span-1">
                 <MapPin size={13} className="text-saree-rose/60 flex-shrink-0" />
