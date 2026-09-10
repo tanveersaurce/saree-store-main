@@ -112,7 +112,7 @@ pipeline {
                     git config user.email "jenkins@ci.com"
                     git config user.name "Jenkins CI"
 
-                    git add saree-store-chart/values.yaml
+                    git add values.yaml
                     git commit -m "auto: update image tags to ${IMAGE_TAG} [ci skip]" || echo "No changes to commit"
                     git push origin main
                     """
