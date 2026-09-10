@@ -44,6 +44,7 @@ export function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus]     = useState('');
   const [tracking, setTracking]       = useState('');
+  const [newIsPaid, setNewIsPaid]     = useState(false);
   const [updating, setUpdating]       = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -58,7 +59,7 @@ export function AdminOrders() {
     setUpdating(true);
     try {
       await orderAPI.updateStatus(selectedOrder._id, {
-        status: newStatus, trackingNumber: tracking,
+        status: newStatus, trackingNumber: tracking, isPaid: newIsPaid,
       });
       qc.invalidateQueries(['admin-orders']);
       toast.success('Order status updated');
@@ -159,6 +160,7 @@ export function AdminOrders() {
                             setSelectedOrder(order);
                             setNewStatus(order.status);
                             setTracking(order.trackingNumber || '');
+                            setNewIsPaid(order.isPaid);
                           }}
                           className="p-1.5 rounded-lg hover:bg-saree-blush text-gray-400 hover:text-saree-rose transition-colors"
                         >
@@ -206,6 +208,13 @@ export function AdminOrders() {
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>{s.replace('_', ' ')}</option>
                   ))}
+                </select>
+              </div>
+              <div>
+                <label className="input-label">Payment Status</label>
+                <select value={newIsPaid ? 'true' : 'false'} onChange={(e) => setNewIsPaid(e.target.value === 'true')} className="input-field">
+                  <option value="false">Pending</option>
+                  <option value="true">Paid</option>
                 </select>
               </div>
               <div>

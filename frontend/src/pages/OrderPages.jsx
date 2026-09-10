@@ -33,59 +33,117 @@ const STATUS_COLORS = {
 export function OrderSuccess() {
   const { id } = useParams();
 
-  return (
-    <div className="page-container py-20 text-center max-w-lg mx-auto">
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200 }}
-      >
-        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={48} className="text-green-500" />
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['order-success', id],
+    queryFn: () => orderAPI.getOne(id).then((r) => r.data),
+    retry: false,
+  });
+
+  if (isLoading) return <LoadingSpinner fullPage />;
+
+  if (error || !data?.order) {
+    return (
+      <div className="page-container py-20 text-center max-w-lg mx-auto">
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-red-500 text-3xl font-bold">!</span>
         </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h1 className="font-display text-3xl font-bold text-saree-charcoal mb-2">
-          Order Placed! 🎉
-        </h1>
-        <p className="text-gray-500 mb-2">Your beautiful sarees are on their way</p>
-        <p className="text-xs text-gray-400 mb-8">
-          Order ID: <span className="font-mono font-semibold text-saree-charcoal">{id}</span>
+        <h1 className="font-display text-2xl font-bold text-saree-charcoal mb-2">Order Verification Failed</h1>
+        <p className="text-gray-500 text-sm mb-6">
+          We could not verify your order or the payment was unsuccessful.
         </p>
+        <Link to="/cart" className="btn-primary">Return to Cart</Link>
+      </div>
+    );
+  }
 
-        <div className="flex justify-center gap-4 mb-8 flex-wrap">
-          {[
-            { icon: Package, text: 'Confirmed', active: true },
-            { icon: Truck, text: 'Shipped', active: false },
-            { icon: CheckCircle, text: 'Delivered', active: false },
-          ].map(({ icon: Icon, text, active }) => (
-            <div
-              key={text}
-              className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl ${active ? 'bg-green-50' : 'bg-gray-50'}`}
-            >
-              <Icon size={20} className={active ? 'text-green-500' : 'text-gray-300'} />
-              <span className={`text-xs font-semibold ${active ? 'text-green-600' : 'text-gray-400'}`}>
-                {text}
+  const order = data.order;
+
+  return (
+    <>
+      <Helmet><title>Order Success | Saaj</title></Helmet>
+      <div className="page-container py-12 max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200 }}
+            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <CheckCircle size={40} className="text-green-500" />
+          </motion.div>
+
+          <h1 className="font-display text-3xl font-bold text-saree-charcoal mb-2">
+            Order Placed Successfully! 🎉
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Thank you for shopping with Saaj. Your order has been confirmed.
+          </p>
+        </div>
+
+        {/* Order Details Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-card border border-gray-100 space-y-6 mb-8">
+          <div className="flex flex-wrap justify-between gap-4 pb-4 border-b border-gray-100">
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Order Number</p>
+              <p className="text-sm font-bold text-saree-charcoal">#{order.orderNumber}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Order Date</p>
+              <p className="text-sm text-gray-600 font-medium">{formatDate(order.createdAt)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Amount</p>
+              <p className="text-sm font-bold text-saree-rose">{formatPrice(order.totalPrice)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Payment Status</p>
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block mt-0.5 ${order.isPaid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                {order.isPaid ? 'Paid' : 'Payment Pending'}
               </span>
             </div>
-          ))}
+          </div>
+
+          {/* Delivery Details */}
+          <div>
+            <h3 className="text-sm font-bold text-saree-charcoal mb-2">Delivery Information</h3>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p className="font-semibold text-gray-700">{order.shippingAddress?.fullName}</p>
+              <p>{order.shippingAddress?.addressLine1}</p>
+              {order.shippingAddress?.addressLine2 && <p>{order.shippingAddress.addressLine2}</p>}
+              <p>{order.shippingAddress?.city}, {order.shippingAddress?.state} – {order.shippingAddress?.pincode}</p>
+              <p>📞 Phone: {order.shippingAddress?.phone}</p>
+            </div>
+          </div>
+
+          {/* Items Summary */}
+          <div>
+            <h3 className="text-sm font-bold text-saree-charcoal mb-3">Items Summary</h3>
+            <div className="space-y-3">
+              {order.items.map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <img src={item.image} alt={item.name} className="w-12 h-14 rounded-lg object-cover flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-saree-charcoal truncate">{item.name}</p>
+                    <p className="text-[10px] text-gray-400">Qty: {item.quantity} {item.color ? `| Color: ${item.color}` : ''}</p>
+                  </div>
+                  <span className="text-xs font-bold text-saree-rose">{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-3 justify-center flex-wrap">
-          <Link to={`/orders/${id}`} className="btn-primary gap-2 px-6 py-3">
-            <Package size={15} /> Track Order
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center">
+          <Link to={`/orders/${order._id}`} className="btn-primary flex items-center justify-center gap-2 px-6 py-3 text-sm">
+            <Package size={16} /> View Details
           </Link>
-          <Link to="/" className="btn-secondary gap-2 px-6 py-3">
-            <Home size={15} /> Continue Shopping
+          <Link to="/" className="btn-secondary flex items-center justify-center gap-2 px-6 py-3 text-sm">
+            <Home size={16} /> Continue Shopping
           </Link>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </>
   );
 }
 

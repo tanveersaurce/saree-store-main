@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const orderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -86,11 +87,11 @@ orderSchema.pre('save', async function (next) {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const random = Math.floor(Math.random() * 900000) + 100000;
+    const random = crypto.randomInt(100000, 1000000);
+
     this.orderNumber = `SS${year}${month}${random}`;
   }
 
-  // Push status to history on status change
   if (this.isModified('status')) {
     this.statusHistory.push({
       status: this.status,

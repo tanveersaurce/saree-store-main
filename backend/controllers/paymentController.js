@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 // ─── Easebuzz ─────────────────────────────────────────────────────────────────
 

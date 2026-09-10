@@ -28,7 +28,12 @@ app.set('trust proxy', 1);
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:3000'],
+  origin: [
+    'http://localhost:3000',
+    'https://saajheritage.com',
+    'https://www.saajheritage.com',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -94,9 +99,10 @@ app.use('/api/categories', categoryRoutes);
 
 // ─── Serve Frontend in Production ─────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  const frontendPath = path.join(__dirname, '../frontend/build');
+  app.use(express.static(frontendPath));
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
+    res.sendFile(path.resolve(frontendPath, 'index.html'));
   });
 }
 
@@ -107,10 +113,7 @@ app.use(errorHandler);
 // ─── Database Connection ──────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌ MongoDB connection error: ${error.message}`);

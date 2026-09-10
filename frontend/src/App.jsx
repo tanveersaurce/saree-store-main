@@ -27,6 +27,15 @@ const ForgotPassword= lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const NotFound      = lazy(() => import('./pages/NotFound'));
 
+// Legal and policy pages
+const PrivacyPolicy   = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const ShippingPolicy  = lazy(() => import('./pages/ShippingPolicy'));
+const CancellationRefund = lazy(() => import('./pages/CancellationRefund'));
+const ReturnReplacement = lazy(() => import('./pages/ReturnReplacement'));
+const ContactUs       = lazy(() => import('./pages/ContactUs'));
+const AboutUs         = lazy(() => import('./pages/AboutUs'));
+
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminProducts  = lazy(() => import('./pages/admin/Products'));
@@ -92,6 +101,15 @@ function App() {
                 <Route path="/product/:slug"      element={<ProductDetail />} />
                 <Route path="/wishlist"           element={<Wishlist />} />
                 <Route path="/cart"               element={<Cart />} />
+
+                {/* Legal and policy pages */}
+                <Route path="/privacy-policy"           element={<PrivacyPolicy />} />
+                <Route path="/terms-and-conditions"     element={<TermsConditions />} />
+                <Route path="/shipping-policy"          element={<ShippingPolicy />} />
+                <Route path="/cancellation-refund-policy" element={<CancellationRefund />} />
+                <Route path="/return-replacement-policy" element={<ReturnReplacement />} />
+                <Route path="/contact-us"               element={<ContactUs />} />
+                <Route path="/about-us"                 element={<AboutUs />} />
 
                 {/* Auth required */}
                 <Route path="/checkout"           element={<ProtectedRoute><Checkout /></ProtectedRoute>} />

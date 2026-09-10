@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    networks:
+      - saree-network
+
+  backend:
+    build: ./backend
+    container_name: saree-backend
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/saree-store
+    depends_on:
+      - mongo
+    networks:
+      - saree-network
+
+  frontend:
+    build: ./frontend
+    container_name: saree-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - saree-network
+
+networks:
+  saree-network:

@@ -5,6 +5,20 @@ const { Review } = require('../models/index');
 // ─── @desc  Get all products with filter/sort/paginate ────────────────────────
 // @route   GET /api/products
 // @access  Public
+const applyPriceFilter = (filter, minPrice, maxPrice) => {
+  if (!minPrice && !maxPrice) return;
+
+  const priceFilter = {
+    ...(minPrice && { $gte: +minPrice }),
+    ...(maxPrice && { $lte: +maxPrice }),
+  };
+
+  filter.$or = [
+    { discountPrice: priceFilter },
+    { price: priceFilter },
+  ];
+};
+
 const getProducts = asyncHandler(async (req, res) => {
   const {
   keyword, category, fabric, print, occasion, minPrice, maxPrice,
@@ -20,23 +34,26 @@ const getProducts = asyncHandler(async (req, res) => {
 
   const categoryList = [];
   if (category) categoryList.push(...category.split(','));
-  if (req.query.print) categoryList.push(...req.query.print.split(','));
+      if (print) {
+      categoryList.push(...print.split(','));
+      }
   if (categoryList.length > 0) {
     filter.category = { $in: categoryList };
   }
   if (fabric) filter.fabric = { $in: fabric.split(',') };
   if (occasion) filter.occasion = { $in: occasion.split(',') };
-  if (minPrice || maxPrice) {
-    filter.$or = [
-      { discountPrice: { ...(minPrice && { $gte: +minPrice }), ...(maxPrice && { $lte: +maxPrice }) } },
-      { price: { ...(minPrice && { $gte: +minPrice }), ...(maxPrice && { $lte: +maxPrice }) } },
-    ];
-  }
+  applyPriceFilter(filter, minPrice, maxPrice);
   if (minRating) filter.ratings = { $gte: +minRating };
-  if (isFeatured === 'true') filter.isFeatured = true;
-  if (isTrending === 'true') filter.isTrending = true;
-  if (isNewArrival === 'true') filter.isNewArrival = true;
-  if (isBestSeller === 'true') filter.isBestSeller = true;
+  [
+  ['isFeatured', isFeatured],
+  ['isTrending', isTrending],
+  ['isNewArrival', isNewArrival],
+  ['isBestSeller', isBestSeller],
+].forEach(([key, value]) => {
+  if (value === 'true') {
+    filter[key] = true;
+  }
+});
   if (inStock === 'true') filter.stock = { $gt: 0 };
 
   const sortOptions = {
@@ -50,8 +67,8 @@ const getProducts = asyncHandler(async (req, res) => {
   };
   const sortBy = sortOptions[sort] || sortOptions['newest'];
 
-  const pageNum = Math.max(1, parseInt(page));
-  const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+  const pageNum = Math.max(1, Number.parseInt(page));
+  const limitNum = Math.min(50, Math.max(1, Number.parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
 
   const [products, total] = await Promise.all([

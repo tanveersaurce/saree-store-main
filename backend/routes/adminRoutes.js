@@ -42,7 +42,7 @@ router.get('/dashboard', protect, adminOnly, asyncHandler(async (req, res) => {
       recentOrders,
       lowStockProducts,
       ordersByStatus,
-      revenueByMonth: revenueByMonth.reverse(),
+      revenueByMonth: [...revenueByMonth].reverse(),
     },
   });
 }));

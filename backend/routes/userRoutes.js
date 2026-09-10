@@ -8,12 +8,12 @@ router.get('/', protect, adminOnly, asyncHandler(async (req, res) => {
   const { page = 1, limit = 20, search } = req.query;
   const filter = {};
   if (search) filter.$or = [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }];
-  const pageNum = parseInt(page);
+  const pageNum = Number.parseInt(page);
   const [users, total] = await Promise.all([
-    User.find(filter).select('-password').sort('-createdAt').skip((pageNum - 1) * parseInt(limit)).limit(parseInt(limit)),
+    User.find(filter).select('-password').sort('-createdAt').skip((pageNum - 1) * Number.parseInt(limit)).limit(Number.parseInt(limit)),
     User.countDocuments(filter),
   ]);
-  res.json({ success: true, users, total, pages: Math.ceil(total / parseInt(limit)) });
+  res.json({ success: true, users, total, pages: Math.ceil(total / Number.parseInt(limit)) });
 }));
 
 router.put('/:id/status', protect, adminOnly, asyncHandler(async (req, res) => {

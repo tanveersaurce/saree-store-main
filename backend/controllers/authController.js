@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const crypto = require('crypto');
+const crypto = require("node:crypto");
 const User = require('../models/User');
 const { sendTokenResponse } = require('../middleware/authMiddleware');
 const { sendEmail } = require('../utils/sendEmail');
