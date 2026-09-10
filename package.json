@@ -1,16 +1,9 @@
 {
-  "name": "saree-store",
+  "name": "fullstack-monorepo",
   "version": "1.0.0",
-  "description": "SareeSaanvi — Full-stack MERN eCommerce for Premium Sarees",
-  "private": true,
   "scripts": {
-    "install:all": "npm install && cd backend",
-    "dev": "concurrently \"npm run dev:backend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "start": "cd backend && npm start",
-    "seed": "cd backend && npm run seed"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "build-frontend": "cd frontend && npm install && npm run build",
+    "postinstall": "npm run build-frontend",
+    "start": "cd backend && node server.js"
   }
 }
