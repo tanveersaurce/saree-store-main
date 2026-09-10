@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -19,6 +20,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'sonar-scanner'
+
                     withSonarQubeEnv('sonarqube') {
                         sh "${scannerHome}/bin/sonar-scanner"
                     }
@@ -45,9 +47,17 @@ pipeline {
         stage('Trivy Backend Scan') {
             steps {
                 sh '''
-                mkdir -p trivy-reports
-                trivy image --format table --output trivy-reports/backend-report.txt saree-backend:test
-                trivy image --severity CRITICAL --exit-code 0 saree-backend:test
+                    mkdir -p trivy-reports
+
+                    trivy image \
+                    --format table \
+                    --output trivy-reports/backend-report.txt \
+                    saree-backend:test
+
+                    trivy image \
+                    --severity CRITICAL \
+                    --exit-code 0 \
+                    saree-backend:test
                 '''
             }
         }
@@ -55,21 +65,32 @@ pipeline {
         stage('Trivy Frontend Scan') {
             steps {
                 sh '''
-                trivy image --format table --output trivy-reports/frontend-report.txt saree-frontend:test
-                trivy image --severity CRITICAL --exit-code 0 saree-frontend:test
+                    trivy image \
+                    --format table \
+                    --output trivy-reports/frontend-report.txt \
+                    saree-frontend:test
+
+                    trivy image \
+                    --severity CRITICAL \
+                    --exit-code 0 \
+                    saree-frontend:test
                 '''
             }
         }
 
         stage('Docker Hub Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        echo $DOCKER_PASS | docker login \
+                        -u $DOCKER_USER \
+                        --password-stdin
                     '''
                 }
             }
@@ -78,8 +99,8 @@ pipeline {
         stage('Push Backend Image') {
             steps {
                 sh """
-                docker tag saree-backend:test ${BACKEND_IMAGE}:${IMAGE_TAG}
-                docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
+                    docker tag saree-backend:test ${BACKEND_IMAGE}:${IMAGE_TAG}
+                    docker push ${BACKEND_IMAGE}:${IMAGE_TAG}
                 """
             }
         }
@@ -87,57 +108,89 @@ pipeline {
         stage('Push Frontend Image') {
             steps {
                 sh """
-                docker tag saree-frontend:test ${FRONTEND_IMAGE}:${IMAGE_TAG}
-                docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
+                    docker tag saree-frontend:test ${FRONTEND_IMAGE}:${IMAGE_TAG}
+                    docker push ${FRONTEND_IMAGE}:${IMAGE_TAG}
                 """
             }
         }
 
         stage('Update Helm Values (GitOps)') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'github-creds',
-                    usernameVariable: 'GIT_USER',
-                    passwordVariable: 'GIT_TOKEN'
-                )]) {
-                    sh """
-                    rm -rf helm-repo
-                    git clone https://\$GIT_USER:\$GIT_TOKEN@github.com/tanveersaurce/saree-store-k8s.git helm-repo
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'github-creds',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        rm -rf helm-repo
 
-                    cd helm-repo/saree-store-chart
+                        git clone \
+                        https://$GIT_USER:$GIT_TOKEN@github.com/tanveersaurce/saree-store-k8s.git \
+                        helm-repo
 
-                    python3 -c "
-                    import re
-                    with open('values.yaml') as f:
-                        content = f.read()
-                    content = re.sub(r'(backend:.*?tag: ).*', r'\g<1>${IMAGE_TAG}', content, count=1, flags=re.DOTALL)
-                    content = re.sub(r'(frontend:.*?tag: ).*', r'\g<1>${IMAGE_TAG}', content, count=1, flags=re.DOTALL)
-                    with open('values.yaml', 'w') as f:
-                        f.write(content)
-                    "
+                        cd helm-repo/saree-store-chart
 
-                    git config user.email "jenkins@ci.com"
-                    git config user.name "Jenkins CI"
+                        python3 -c "
+import re
+import os
 
-                    git add values.yaml
-                    git commit -m "auto: update image tags to ${IMAGE_TAG} [ci skip]" || echo "No changes to commit"
-                    git push origin main
-                    """
+tag = os.environ['IMAGE_TAG']
+
+with open('values.yaml') as f:
+    content = f.read()
+
+content = re.sub(
+    r'(backend:.*?tag: ).*',
+    r'\\g<1>' + tag,
+    content,
+    count=1,
+    flags=re.DOTALL
+)
+
+content = re.sub(
+    r'(frontend:.*?tag: ).*',
+    r'\\g<1>' + tag,
+    content,
+    count=1,
+    flags=re.DOTALL
+)
+
+with open('values.yaml', 'w') as f:
+    f.write(content)
+"
+
+                        git config user.email "jenkins@ci.com"
+                        git config user.name "Jenkins CI"
+
+                        git add values.yaml
+
+                        git commit \
+                        -m "auto: update image tags [ci skip]" \
+                        || echo "No changes to commit"
+
+                        git push origin main
+                    '''
                 }
             }
         }
     }
 
     post {
+
         always {
             archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
             sh 'docker logout'
         }
+
         success {
             echo 'Pipeline completed successfully!'
         }
+
         failure {
             echo 'Pipeline failed!'
         }
     }
 }
+```
