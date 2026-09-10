@@ -4,11 +4,8 @@ pipeline {
     environment {
         BACKEND_IMAGE = "tanveeraws/saree-backend"
         FRONTEND_IMAGE = "tanveeraws/saree-frontend"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG = "v${BUILD_NUMBER}"
     }
-    // tools {
-    //     sonarRunner 'sonar-scanner'
-    // }
 
     stages {
 
@@ -49,16 +46,8 @@ pipeline {
             steps {
                 sh '''
                 mkdir -p trivy-reports
-
-                trivy image \
-                --format table \
-                --output trivy-reports/backend-report.txt \
-                saree-backend:test
-
-                trivy image \
-                --severity CRITICAL \
-                --exit-code 0 \
-                saree-backend:test
+                trivy image --format table --output trivy-reports/backend-report.txt saree-backend:test
+                trivy image --severity CRITICAL --exit-code 0 saree-backend:test
                 '''
             }
         }
@@ -66,15 +55,8 @@ pipeline {
         stage('Trivy Frontend Scan') {
             steps {
                 sh '''
-                trivy image \
-                --format table \
-                --output trivy-reports/frontend-report.txt \
-                saree-frontend:test
-
-                trivy image \
-                --severity CRITICAL \
-                --exit-code 0 \
-                saree-frontend:test
+                trivy image --format table --output trivy-reports/frontend-report.txt saree-frontend:test
+                trivy image --severity CRITICAL --exit-code 0 saree-frontend:test
                 '''
             }
         }
@@ -86,7 +68,6 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-
                     sh '''
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                     '''
@@ -112,6 +93,32 @@ pipeline {
             }
         }
 
+        stage('Update Helm Values (GitOps)') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-creds',
+                    usernameVariable: 'GIT_USER',
+                    passwordVariable: 'GIT_TOKEN'
+                )]) {
+                    sh """
+                    rm -rf helm-repo
+                    git clone https://\$GIT_USER:\$GIT_TOKEN@github.com/tanveersaurce/saree-store-k8s.git helm-repo
+
+                    cd helm-repo/saree-store-chart
+
+                    sed -i '/^backend:/,/^frontend:/ s/tag: .*/tag: ${IMAGE_TAG}/' values.yaml
+                    sed -i '/^frontend:/,/^mongodb:/ s/tag: .*/tag: ${IMAGE_TAG}/' values.yaml
+
+                    git config user.email "jenkins@ci.com"
+                    git config user.name "Jenkins CI"
+
+                    git add saree-store-chart/values.yaml
+                    git commit -m "auto: update image tags to ${IMAGE_TAG} [ci skip]" || echo "No changes to commit"
+                    git push origin main
+                    """
+                }
+            }
+        }
     }
 
     post {
@@ -119,11 +126,9 @@ pipeline {
             archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
             sh 'docker logout'
         }
-
         success {
             echo 'Pipeline completed successfully!'
         }
-
         failure {
             echo 'Pipeline failed!'
         }
