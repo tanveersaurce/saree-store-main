@@ -1,4 +1,3 @@
-```groovy
 pipeline {
     agent any
 
@@ -193,4 +192,3 @@ with open('values.yaml', 'w') as f:
         }
     }
 }
-```
