@@ -138,26 +138,33 @@ import os
 tag = os.environ['IMAGE_TAG']
 
 with open('values.yaml') as f:
-    content = f.read()
+    lines = f.readlines()
 
-content = re.sub(
-    r'(backend:.*?tag: ).*',
-    r'\\g<1>' + tag,
-    content,
-    count=1,
-    flags=re.DOTALL
-)
+def replace_tag_in_block(lines, block_name, tag):
+    in_block = False
+    done = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not in_block and stripped == block_name:
+            in_block = True
+            continue
+        if in_block:
+            # A new top-level key (no leading whitespace) means the block ended
+            if line and not line[0].isspace():
+                in_block = False
+                continue
+            if not done and 'tag:' in line:
+                indent = line[:len(line) - len(line.lstrip())]
+                lines[i] = indent + 'tag: ' + tag + chr(10)
+                done = True
+                in_block = False
+    return lines
 
-content = re.sub(
-    r'(frontend:.*?tag: ).*',
-    r'\\g<1>' + tag,
-    content,
-    count=1,
-    flags=re.DOTALL
-)
+lines = replace_tag_in_block(lines, 'backend:', tag)
+lines = replace_tag_in_block(lines, 'frontend:', tag)
 
 with open('values.yaml', 'w') as f:
-    f.write(content)
+    f.writelines(lines)
 "
 
                         git config user.email "jenkins@ci.com"
