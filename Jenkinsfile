@@ -106,8 +106,15 @@ pipeline {
 
                     cd helm-repo/saree-store-chart
 
-                    sed -i '/^backend:/,/^frontend:/ s/tag: .*/tag: ${IMAGE_TAG}/' values.yaml
-                    sed -i '/^frontend:/,/^mongodb:/ s/tag: .*/tag: ${IMAGE_TAG}/' values.yaml
+                    python3 -c "
+                    import re
+                    with open('values.yaml') as f:
+                        content = f.read()
+                    content = re.sub(r'(backend:.*?tag: ).*', r'\g<1>${IMAGE_TAG}', content, count=1, flags=re.DOTALL)
+                    content = re.sub(r'(frontend:.*?tag: ).*', r'\g<1>${IMAGE_TAG}', content, count=1, flags=re.DOTALL)
+                    with open('values.yaml', 'w') as f:
+                        f.write(content)
+                    "
 
                     git config user.email "jenkins@ci.com"
                     git config user.name "Jenkins CI"
