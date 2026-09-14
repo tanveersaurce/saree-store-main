@@ -9,7 +9,7 @@ data:
   NODE_ENV: "development"
   JWT_EXPIRE: "1d"
   JWT_COOKIE_EXPIRE: "1"
-  EASEBUZZ_ENV: "test"
+  EASEBUZZ_ENV: "prod"
   SMTP_HOST: "smtp.gmail.com"
   SMTP_PORT: "587"
   FROM_NAME: "Saaj"

@@ -11,23 +11,26 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
   const user = req.user;
 
   if (!amount || amount <= 0) {
-    res.status(400); throw new Error('Invalid amount');
+    res.status(400);
+    throw new Error('Invalid amount');
   }
 
   const txnid = `TXN_${Date.now()}`;
   const key = process.env.EASEBUZZ_KEY || '233777';
   const salt = process.env.EASEBUZZ_SALT || '777332';
-  const env = process.env.EASEBUZZ_ENV || 'test';
+  const env = (process.env.EASEBUZZ_ENV || 'test').toLowerCase();
+  const isProd = env === 'prod' || env === 'production';
 
   const surl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success`;
   const furl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/failure`;
 
   const productinfo = 'Sarees';
-  const firstname = user.name.split(' ')[0] || 'Customer';
-  const email = user.email;
-  const phone = user.phone || '9999999999';
+  const firstname = (user.name ? user.name.split(' ')[0] : 'Customer').replace(/[^a-zA-Z0-9]/g, '') || 'Customer';
+  const email = user.email || 'customer@example.com';
+  const rawPhone = user.phone || '9999999999';
+  const phone = rawPhone.replace(/[^0-9]/g, '').slice(-10) || '9999999999';
 
-  const udf1 = orderId; 
+  const udf1 = orderId || '';
 
   // key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10|salt
   const hashString = [
@@ -37,7 +40,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     productinfo,
     firstname,
     email,
-    udf1 || '',
+    udf1,
     '', // udf2
     '', // udf3
     '', // udf4
@@ -49,6 +52,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     '', // udf10
     salt
   ].join('|');
+
   const hash = crypto.createHash('sha512').update(hashString).digest('hex');
 
   const payload = new URLSearchParams({
@@ -65,19 +69,21 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     udf1,
   });
 
-  const url = env === 'prod' 
-    ? 'https://pay.easebuzz.in/payment/initiateLink' 
+  const url = isProd
+    ? 'https://pay.easebuzz.in/payment/initiateLink'
     : 'https://testpay.easebuzz.in/payment/initiateLink';
 
   console.log('--- EASEBUZZ REQUEST ---');
   console.log('URL:', url);
+  console.log('Env:', env, '(isProd:', isProd, ')');
+  console.log('Key:', key);
   console.log('Payload:', Object.fromEntries(payload));
   console.log('Hash String:', hashString);
-  console.log('Hash:', hash);
   console.log('------------------------');
 
+  let response;
   try {
-    const response = await fetch(url, {
+    response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -85,23 +91,25 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
       },
       body: payload.toString(),
     });
+  } catch (netError) {
+    res.status(502);
+    throw new Error(`Easebuzz Gateway Connection Error: ${netError.message}`);
+  }
 
-    const resData = await response.json();
+  const resData = await response.json();
+  console.log('--- EASEBUZZ RESPONSE ---', resData);
 
-    if (resData.status === 1) {
-      res.json({
-        success: true,
-        accessKey: resData.data,
-        key,
-        env,
-      });
-    } else {
-      res.status(400);
-      throw new Error(resData.error_desc || 'Failed to initiate payment with Easebuzz');
-    }
-  } catch (error) {
-    res.status(500);
-    throw new Error(`Easebuzz Gateway Error: ${error.message}`);
+  if (resData.status === 1) {
+    res.json({
+      success: true,
+      accessKey: resData.data,
+      key,
+      env: isProd ? 'prod' : 'test',
+    });
+  } else {
+    const errorMsg = resData.error_desc || resData.data || 'Failed to initiate payment with Easebuzz';
+    res.status(400);
+    throw new Error(`Easebuzz Gateway Error: ${errorMsg}`);
   }
 });
 

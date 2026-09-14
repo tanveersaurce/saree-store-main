@@ -106,7 +106,10 @@ export default function Checkout() {
       clearCart();
       navigate(`/order-success/${orderId}`);
     } catch (err) {
-      if (err.message !== 'Payment cancelled') toast.error('Failed to place order. Please try again.');
+      if (err.message !== 'Payment cancelled') {
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to place order. Please try again.';
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
