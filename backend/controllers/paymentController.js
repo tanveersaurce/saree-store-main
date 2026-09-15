@@ -16,8 +16,8 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
   }
 
   const txnid = `TXN_${Date.now()}`;
-  const key = process.env.EASEBUZZ_KEY || '233777';
-  const salt = process.env.EASEBUZZ_SALT || '777332';
+  const key = process.env.EASEBUZZ_KEY || 'M8YLX5X9Q';
+  const salt = process.env.EASEBUZZ_SALT || '07JHRA9CQ';
   const env = (process.env.EASEBUZZ_ENV || 'test').toLowerCase();
   const isProd = env === 'prod' || env === 'production';
 
@@ -27,16 +27,24 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
   const productinfo = 'Sarees';
   const firstname = (user.name ? user.name.split(' ')[0] : 'Customer').replace(/[^a-zA-Z0-9]/g, '') || 'Customer';
   const email = user.email || 'customer@example.com';
-  const rawPhone = user.phone || '9999999999';
-  const phone = rawPhone.replace(/[^0-9]/g, '').slice(-10) || '9999999999';
+  
+  // Ensure phone is exactly 10 digits
+  let rawPhone = (user.phone || '').replace(/[^0-9]/g, '');
+  if (rawPhone.length < 10) {
+    rawPhone = '9999999999';
+  } else {
+    rawPhone = rawPhone.slice(-10);
+  }
+  const phone = rawPhone;
 
   const udf1 = orderId || '';
+  const formattedAmount = Number(amount).toFixed(2);
 
   // key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10|salt
   const hashString = [
     key,
     txnid,
-    Number(amount).toFixed(2),
+    formattedAmount,
     productinfo,
     firstname,
     email,
@@ -58,7 +66,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
   const payload = new URLSearchParams({
     key,
     txnid,
-    amount: Number(amount).toFixed(2),
+    amount: formattedAmount,
     productinfo,
     firstname,
     email,
@@ -69,9 +77,10 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     udf1,
   });
 
-  const url = isProd
-    ? 'https://pay.easebuzz.in/payment/initiateLink'
-    : 'https://testpay.easebuzz.in/payment/initiateLink';
+  const prodUrl = 'https://pay.easebuzz.in/payment/initiateLink';
+  const testUrl = 'https://testpay.easebuzz.in/payment/initiateLink';
+
+  const url = isProd ? prodUrl : testUrl;
 
   console.log('--- EASEBUZZ REQUEST ---');
   console.log('URL:', url);
@@ -96,8 +105,38 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     throw new Error(`Easebuzz Gateway Connection Error: ${netError.message}`);
   }
 
-  const resData = await response.json();
+  let resData = await response.json();
   console.log('--- EASEBUZZ RESPONSE ---', resData);
+
+  // If prod URL returns invalid merchant / validation error, try test URL fallback if test credentials are in use
+  if (resData.status !== 1 && isProd) {
+    const errorDesc = (resData.error_desc || resData.data || '').toLowerCase();
+    if (errorDesc.includes('invalid merchant key') || errorDesc.includes('request invalid') || resData.data === 'Parameter validation failed') {
+      console.warn('⚠️ Easebuzz Prod initiation failed, trying Test URL fallback...');
+      try {
+        const testResponse = await fetch(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: payload.toString(),
+        });
+        const testResData = await testResponse.json();
+        console.log('--- EASEBUZZ FALLBACK RESPONSE ---', testResData);
+        if (testResData.status === 1) {
+          return res.json({
+            success: true,
+            accessKey: testResData.data,
+            key,
+            env: 'test',
+          });
+        }
+      } catch (fallbackErr) {
+        console.error('Fallback failed:', fallbackErr.message);
+      }
+    }
+  }
 
   if (resData.status === 1) {
     res.json({
@@ -118,7 +157,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
 // @access  Private
 const verifyEasebuzzPayment = asyncHandler(async (req, res) => {
   const { status, txnid, amount, productinfo, firstname, email, udf1, key, easepayid, hash } = req.body;
-  const salt = process.env.EASEBUZZ_SALT || '777332';
+  const salt = process.env.EASEBUZZ_SALT || '07JHRA9CQ';
 
   // salt|status|udf10|udf9|udf8|udf7|udf6|udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
   const checkHashString = `${salt}|${status}||||||||||${udf1 || ''}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;

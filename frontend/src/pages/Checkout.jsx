@@ -53,6 +53,10 @@ export default function Checkout() {
       const { accessKey, key, env } = data;
 
       return new Promise((resolve, reject) => {
+        if (typeof window.EasebuzzCheckout !== 'function') {
+          reject(new Error('Easebuzz SDK not loaded. Please refresh the page and try again.'));
+          return;
+        }
         const easebuzzCheckout = new window.EasebuzzCheckout(key, env);
         const options = {
           access_key: accessKey,
