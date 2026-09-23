@@ -15,19 +15,29 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     throw new Error('Invalid amount');
   }
 
-  const txnid = `TXN_${Date.now()}`;
-  const key = process.env.EASEBUZZ_KEY || 'M8YLX5X9Q';
-  const salt = process.env.EASEBUZZ_SALT || '07JHRA9CQ';
+  // ✅ FIX 1: No hardcoded fallback keys
+  const key = process.env.EASEBUZZ_KEY;
+  const salt = process.env.EASEBUZZ_SALT;
   const env = (process.env.EASEBUZZ_ENV || 'test').toLowerCase();
   const isProd = env === 'prod' || env === 'production';
 
-  const surl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success`;
-  const furl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/failure`;
+  // ✅ FIX 2: Validate credentials exist
+  if (!key || !salt) {
+    res.status(500);
+    throw new Error('Easebuzz credentials not configured. Please set EASEBUZZ_KEY and EASEBUZZ_SALT environment variables.');
+  }
+
+  const txnid = `TXN_${Date.now()}`;
+
+  // ✅ FIX 3: Use correct FRONTEND_URL
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const surl = `${frontendUrl}/payment/success`;
+  const furl = `${frontendUrl}/payment/failure`;
 
   const productinfo = 'Sarees';
   const firstname = (user.name ? user.name.split(' ')[0] : 'Customer').replace(/[^a-zA-Z0-9]/g, '') || 'Customer';
   const email = user.email || 'customer@example.com';
-  
+
   // Ensure phone is exactly 10 digits
   let rawPhone = (user.phone || '').replace(/[^0-9]/g, '');
   if (rawPhone.length < 10) {
@@ -40,6 +50,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
   const udf1 = orderId || '';
   const formattedAmount = Number(amount).toFixed(2);
 
+  // ✅ FIX 4: Correct hash format
   // key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10|salt
   const hashString = [
     key,
@@ -58,7 +69,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     '', // udf8
     '', // udf9
     '', // udf10
-    salt
+    salt,
   ].join('|');
 
   const hash = crypto.createHash('sha512').update(hashString).digest('hex');
@@ -77,18 +88,18 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     udf1,
   });
 
-  const prodUrl = 'https://pay.easebuzz.in/payment/initiateLink';
-  const testUrl = 'https://testpay.easebuzz.in/payment/initiateLink';
+  // ✅ FIX 5: Removed test fallback — use correct URL based on env
+  const url = isProd
+    ? 'https://pay.easebuzz.in/payment/initiateLink'
+    : 'https://testpay.easebuzz.in/payment/initiateLink';
 
-  const url = isProd ? prodUrl : testUrl;
-
-  console.log('--- EASEBUZZ REQUEST ---');
-  console.log('URL:', url);
-  console.log('Env:', env, '(isProd:', isProd, ')');
-  console.log('Key:', key);
-  console.log('Payload:', Object.fromEntries(payload));
-  console.log('Hash String:', hashString);
-  console.log('------------------------');
+  // console.log('--- EASEBUZZ REQUEST ---');
+  // console.log('URL:', url);
+  // console.log('Env:', env, '(isProd:', isProd, ')');
+  // console.log('Key:', key);
+  // console.log('Payload:', Object.fromEntries(payload));
+  // console.log('Hash String:', hashString);
+  // console.log('------------------------');
 
   let response;
   try {
@@ -96,7 +107,7 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: payload.toString(),
     });
@@ -105,41 +116,11 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
     throw new Error(`Easebuzz Gateway Connection Error: ${netError.message}`);
   }
 
-  let resData = await response.json();
+  const resData = await response.json();
   console.log('--- EASEBUZZ RESPONSE ---', resData);
 
-  // If prod URL returns invalid merchant / validation error, try test URL fallback if test credentials are in use
-  if (resData.status !== 1 && isProd) {
-    const errorDesc = (resData.error_desc || resData.data || '').toLowerCase();
-    if (errorDesc.includes('invalid merchant key') || errorDesc.includes('request invalid') || resData.data === 'Parameter validation failed') {
-      console.warn('⚠️ Easebuzz Prod initiation failed, trying Test URL fallback...');
-      try {
-        const testResponse = await fetch(testUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          body: payload.toString(),
-        });
-        const testResData = await testResponse.json();
-        console.log('--- EASEBUZZ FALLBACK RESPONSE ---', testResData);
-        if (testResData.status === 1) {
-          return res.json({
-            success: true,
-            accessKey: testResData.data,
-            key,
-            env: 'test',
-          });
-        }
-      } catch (fallbackErr) {
-        console.error('Fallback failed:', fallbackErr.message);
-      }
-    }
-  }
-
   if (resData.status === 1) {
-    res.json({
+    return res.json({
       success: true,
       accessKey: resData.data,
       key,
@@ -156,11 +137,50 @@ const createEasebuzzOrder = asyncHandler(async (req, res) => {
 // @route   POST /api/payment/easebuzz/verify
 // @access  Private
 const verifyEasebuzzPayment = asyncHandler(async (req, res) => {
-  const { status, txnid, amount, productinfo, firstname, email, udf1, key, easepayid, hash } = req.body;
-  const salt = process.env.EASEBUZZ_SALT || '07JHRA9CQ';
+  const {
+    status,
+    txnid,
+    amount,
+    productinfo,
+    firstname,
+    email,
+    udf1,
+    key,
+    easepayid,
+    hash,
+  } = req.body;
 
+  const salt = process.env.EASEBUZZ_SALT;
+
+  // ✅ FIX 6: Validate salt exists
+  if (!salt) {
+    res.status(500);
+    throw new Error('Easebuzz salt not configured');
+  }
+
+  // ✅ FIX 7: Correct reverse hash format for verification
   // salt|status|udf10|udf9|udf8|udf7|udf6|udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key
-  const checkHashString = `${salt}|${status}||||||||||${udf1 || ''}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
+  const checkHashString = [
+    salt,
+    status,
+    '', // udf10
+    '', // udf9
+    '', // udf8
+    '', // udf7
+    '', // udf6
+    '', // udf5
+    '', // udf4
+    '', // udf3
+    '', // udf2
+    udf1 || '',
+    email,
+    firstname,
+    productinfo,
+    amount,
+    txnid,
+    key,
+  ].join('|');
+
   const calculatedHash = crypto.createHash('sha512').update(checkHashString).digest('hex');
 
   if (calculatedHash !== hash) {
@@ -213,9 +233,14 @@ const stripeWebhook = asyncHandler(async (req, res) => {
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(
+      req.rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
-    res.status(400); throw new Error(`Webhook Error: ${err.message}`);
+    res.status(400);
+    throw new Error(`Webhook Error: ${err.message}`);
   }
 
   switch (event.type) {
@@ -233,6 +258,8 @@ const stripeWebhook = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  createEasebuzzOrder, verifyEasebuzzPayment,
-  createStripeIntent, stripeWebhook,
+  createEasebuzzOrder,
+  verifyEasebuzzPayment,
+  createStripeIntent,
+  stripeWebhook,
 };
